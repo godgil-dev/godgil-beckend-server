@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  roleId    Int?
+
+  role Role? @relation(fields: [roleId], references: [id])
+
+  Comment     Comment[]
+  PostLike    PostLike[]
+  Post        Post[]
+  CommentLike CommentLike[]
+  ProConVote  ProConVote[]
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  RolePermission RolePermission[]
+  User           User[]
+}
+
+model Permission {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  RolePermission RolePermission[]
+}
+
+model RolePermission {
+  id           Int      @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model Book {
+  id          Int      @id @default(autoincrement())
+  ibsn        Int      @unique
+  title       String
+  author      String
+  translator  String?
+  description String
+  url         String
+  image       String
+  publisher   String
+  pubdate     DateTime
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  BookDiscussion BookDiscussion[]
+  PostLike       PostLike[]
+}
+
+model Post {
+  id         Int      @id @default(autoincrement())
+  authorId   Int
+  categoryId Int
+  title      String
+  content    String
+  views      Int
+  thumbup    Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  User User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  Comment          Comment[]
+  CommentLike      CommentLike[]
+  BookDiscussion   BookDiscussion[]
+  ProConDiscussion ProConDiscussion[]
+}
+
+model BookDiscussion {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  bookId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  Book Book @relation(fields: [bookId], references: [id])
+}
+
+model ProConDiscussion {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  ProConVote ProConVote[]
+}
+
+model ProConVote {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  proConDiscussionID Int
+  isAgree            Boolean
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  ProConDiscussion ProConDiscussion @relation(fields: [proConDiscussionID], references: [id], onDelete: Cascade)
+  User             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  postId    Int
+  content   String
+  isAgree   Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  CommentLike CommentLike[]
+}
+
+model CommentLike {
+  id        Int      @id @default(autoincrement())
+  postId    Int?
+  userId    Int
+  commentId Int
+  content   String
+  isLike    Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  Post    Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model PostLike {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  bookId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Book      Book     @relation(fields: [bookId], references: [id])
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+}

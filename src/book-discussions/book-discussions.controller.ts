@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Public } from 'src/auth/decorators/public.decorator';
 import UserRequest from 'src/auth/types/user-request.interface';
+import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { BookDiscussionsService } from './book-discussions.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
@@ -43,14 +44,14 @@ export class BookDiscussionsController {
   @ApiQuery({ name: 'limit', type: Number, required: true })
   @ApiQuery({ name: 'page', type: Number, required: true })
   async findAll(
-    @Query('limit', ParseIntPipe) limit = 10,
-    @Query('page', ParseIntPipe) page = 1,
+    @Query() paginationQueryDto: PaginationQueryDto,
     @Req() request: UserRequest,
   ) {
+    const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
-    console.log(limit, page);
+
     const { posts, totalCount } = await this.bookDiscussionsService.findAll(
-      limit,
+      Number(limit),
       offset,
     );
 

@@ -66,7 +66,22 @@ export class BookDiscussionsService {
   }
 
   async findAll(limit: number, offset: number) {
-    return `This action findAll a #${limit} ${offset} bookDiscussion`;
+    const [posts, totalCount] = await this.prisma.$transaction([
+      this.prisma.post.findMany({
+        take: limit,
+        skip: offset,
+        include: {
+          BookDiscussion: {
+            include: {
+              Book: true,
+            },
+          },
+        },
+      }),
+      this.prisma.bookDiscussion.count(),
+    ]);
+
+    return { posts: posts.map(this.convertPostToReposnse), totalCount };
   }
 
   async findOne(id: number) {

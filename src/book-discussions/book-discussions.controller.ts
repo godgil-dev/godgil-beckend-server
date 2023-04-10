@@ -47,7 +47,22 @@ export class BookDiscussionsController {
     @Query('page', ParseIntPipe) page = 1,
     @Req() request: UserRequest,
   ) {
-    return await this.bookDiscussionsService.findAll(limit, page);
+    const offset = (page - 1) * limit;
+    console.log(limit, page);
+    const { posts, totalCount } = await this.bookDiscussionsService.findAll(
+      limit,
+      offset,
+    );
+
+    return {
+      posts,
+      pagesInfo: {
+        page,
+        totalCount,
+        currentCount: posts.length,
+        totalPage: Math.ceil(totalCount / limit),
+      },
+    };
   }
 
   @Public()

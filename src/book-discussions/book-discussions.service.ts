@@ -2,18 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  Post,
-  BookDiscussion,
-  Book,
-  User,
-  Comment,
-  CommentLike,
-} from '@prisma/client';
+import { Post, BookDiscussion, Book, Comment } from '@prisma/client';
+import { PostsService } from 'src/posts/posts.service';
 
 @Injectable()
 export class BookDiscussionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private postService: PostsService,
+  ) {}
 
   convertPostToReposnse(
     post: Post & {
@@ -219,6 +216,6 @@ export class BookDiscussionsService {
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} bookDiscussion`;
+    return this.postService.remove(id);
   }
 }

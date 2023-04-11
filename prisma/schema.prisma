@@ -15,15 +15,16 @@ model User {
   avatarUrl String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  roleId    Int?
+  roleId    Int      @default(4)
 
   role Role? @relation(fields: [roleId], references: [id])
 
-  Comment     Comment[]
-  PostLike    PostLike[]
-  Post        Post[]
-  CommentLike CommentLike[]
-  ProConVote  ProConVote[]
+  Post           Post[]
+  ProConVote     ProConVote[]
+  Comment        Comment[]
+  CommentLike    CommentLike[]
+  PostLike       PostLike[]
+  CommentDislike CommentDislike[]
 }
 
 model Role {
@@ -61,7 +62,7 @@ model RolePermission {
 
 model Book {
   id          Int      @id @default(autoincrement())
-  ibsn        Int      @unique
+  isbn        Int      @unique
   title       String
   author      String
   translator  String?
@@ -79,22 +80,21 @@ model Book {
 }
 
 model Post {
-  id         Int      @id @default(autoincrement())
-  authorId   Int
-  categoryId Int
-  title      String
-  content    String
-  views      Int
-  thumbup    Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  title     String
+  content   String
+  views     Int      @default(0)
+  thumbup   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  User User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
+  User             User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   Comment          Comment[]
   CommentLike      CommentLike[]
   BookDiscussion   BookDiscussion[]
   ProConDiscussion ProConDiscussion[]
+  CommentDislike   CommentDislike[]
 }
 
 model BookDiscussion {
@@ -143,7 +143,8 @@ model Comment {
   User User @relation(fields: [authorId], references: [id], onDelete: Cascade)
   Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  CommentLike CommentLike[]
+  CommentLike    CommentLike[]
+  CommentDislike CommentDislike[]
 }
 
 model CommentLike {
@@ -151,8 +152,21 @@ model CommentLike {
   postId    Int?
   userId    Int
   commentId Int
-  content   String
-  isLike    Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  Post    Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model CommentDislike {
+  id        Int      @id @default(autoincrement())
+  postId    Int?
+  userId    Int
+  commentId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

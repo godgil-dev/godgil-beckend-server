@@ -5,7 +5,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  MinLength,
   ValidateNested,
 } from 'class-validator';
 
@@ -13,7 +12,7 @@ export class bookDto {
   @IsNotEmpty()
   @IsNumber()
   @ApiProperty()
-  ibsn: number;
+  isbn: number;
 
   @IsNotEmpty()
   @IsString()

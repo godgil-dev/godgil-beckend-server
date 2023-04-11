@@ -167,7 +167,55 @@ export class BookDiscussionsService {
   }
 
   async update(id: number, updateBookDiscussionDto: UpdateBookDiscussionDto) {
-    return `This action updates a #${id} bookDiscussion`;
+    let book = null;
+
+    if (updateBookDiscussionDto.book) {
+      book = await this.prisma.book.findUnique({
+        where: { isbn: updateBookDiscussionDto.book.isbn },
+      });
+
+      if (!book) {
+        book = await this.prisma.book.create({
+          data: updateBookDiscussionDto.book,
+        });
+      }
+    }
+
+    const post = await this.prisma.post.update({
+      where: { id },
+      data: {
+        ...(updateBookDiscussionDto.title && {
+          title: updateBookDiscussionDto.title,
+        }),
+        ...(updateBookDiscussionDto.content && {
+          content: updateBookDiscussionDto.content,
+        }),
+        ...(book && {
+          BookDiscussion: {
+            update: {
+              where: { postId: id },
+              data: {
+                bookId: book.id,
+              },
+            },
+          },
+        }),
+      },
+      include: {
+        BookDiscussion: {
+          include: {
+            Book: true,
+          },
+        },
+        User: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+
+    return this.convertPostToReposnse(post);
   }
 
   async remove(id: number) {

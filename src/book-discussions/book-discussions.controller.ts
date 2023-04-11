@@ -9,25 +9,26 @@ import {
   Req,
   Query,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 import { Public } from 'src/auth/decorators/public.decorator';
 import UserRequest from 'src/auth/types/user-request.interface';
+import { OwnershipGuard } from 'src/posts/guards/ownership.guard';
 import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { BookDiscussionsService } from './book-discussions.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 
-@Controller('book-discussions')
 @ApiTags('book-discussions')
+@Controller('book-discussions')
 export class BookDiscussionsController {
   constructor(
     private readonly bookDiscussionsService: BookDiscussionsService,
   ) {}
 
-  @Post()
   @ApiBearerAuth()
+  @Post()
   async create(
     @Body() createBookDiscussionDto: CreateBookDiscussionDto,
     @Req() request: UserRequest,
@@ -39,10 +40,10 @@ export class BookDiscussionsController {
   }
 
   // @ApiBearerAuth()
-  @Public()
-  @Get()
   @ApiQuery({ name: 'limit', type: Number, required: true })
   @ApiQuery({ name: 'page', type: Number, required: true })
+  @Public()
+  @Get()
   async findAll(
     @Query() paginationQueryDto: PaginationQueryDto,
     @Req() request: UserRequest,
@@ -68,12 +69,13 @@ export class BookDiscussionsController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @Req() request: UserRequest) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.bookDiscussionsService.findOne(id);
   }
 
-  @Patch(':id')
   @ApiBearerAuth()
+  @Patch(':id')
+  @UseGuards(OwnershipGuard)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookDiscussionDto: UpdateBookDiscussionDto,
@@ -81,8 +83,9 @@ export class BookDiscussionsController {
     return this.bookDiscussionsService.update(id, updateBookDiscussionDto);
   }
 
-  @Delete(':id')
   @ApiBearerAuth()
+  @Delete(':id')
+  @UseGuards(OwnershipGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bookDiscussionsService.remove(id);
   }

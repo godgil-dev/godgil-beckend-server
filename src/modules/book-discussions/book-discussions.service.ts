@@ -2,50 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Post, BookDiscussion, Book, Comment } from '@prisma/client';
-import { PostsService } from 'src/posts/posts.service';
+import { Post, BookDiscussion, Book } from '@prisma/client';
+import { PostsService } from 'src/modules/posts/posts.service';
+import { BooksService } from '../books/books.service';
 
 @Injectable()
 export class BookDiscussionsService {
   constructor(
     private prisma: PrismaService,
     private postService: PostsService,
+    private bookService: BooksService,
   ) {}
 
   convertPostToReposnse(
     post: Post & {
-      BookDiscussion: (BookDiscussion & {
+      BookDiscussion: BookDiscussion & {
         Book: Book;
-      })[];
-      Comment?: (Comment & {
-        User: {
-          username: string;
-        };
-        _count: {
-          CommentLike: number;
-          CommentDislike: number;
-        };
-      })[];
+      };
+
       User: {
         username: string;
       };
     },
   ) {
-    let comments = null;
-
-    if (post?.Comment) {
-      comments = post?.Comment.map((comment) => {
-        const { authorId, postId, isAgree, User, _count, ...rest } = comment;
-
-        return {
-          ...rest,
-          author: User.username,
-          like: _count.CommentLike,
-          dislike: _count.CommentDislike,
-        };
-      });
-    }
-
     return {
       id: post.id,
       author: post.User.username,
@@ -55,8 +34,7 @@ export class BookDiscussionsService {
       thumbup: post.thumbup,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
-      book: post.BookDiscussion[0].Book,
-      ...(comments && { comments }),
+      book: post.BookDiscussion.Book,
     };
   }
 
@@ -64,15 +42,9 @@ export class BookDiscussionsService {
     createBookDiscussionDto: CreateBookDiscussionDto,
     authorId: number,
   ) {
-    let book = await this.prisma.book.findUnique({
-      where: { isbn: createBookDiscussionDto.book.isbn },
-    });
-
-    if (!book) {
-      book = await this.prisma.book.create({
-        data: createBookDiscussionDto.book,
-      });
-    }
+    const book = await this.bookService.findAndCreateByIsbn(
+      createBookDiscussionDto.book,
+    );
 
     const post = await this.prisma.post.create({
       data: {
@@ -98,6 +70,7 @@ export class BookDiscussionsService {
         },
       },
     });
+    console.log(post);
 
     return this.convertPostToReposnse(post);
   }
@@ -142,21 +115,6 @@ export class BookDiscussionsService {
             username: true,
           },
         },
-        Comment: {
-          include: {
-            User: {
-              select: {
-                username: true,
-              },
-            },
-            _count: {
-              select: {
-                CommentLike: true,
-                CommentDislike: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -167,15 +125,9 @@ export class BookDiscussionsService {
     let book = null;
 
     if (updateBookDiscussionDto.book) {
-      book = await this.prisma.book.findUnique({
-        where: { isbn: updateBookDiscussionDto.book.isbn },
-      });
-
-      if (!book) {
-        book = await this.prisma.book.create({
-          data: updateBookDiscussionDto.book,
-        });
-      }
+      book = await this.bookService.findAndCreateByIsbn(
+        updateBookDiscussionDto.book,
+      );
     }
 
     const post = await this.prisma.post.update({
@@ -190,10 +142,7 @@ export class BookDiscussionsService {
         ...(book && {
           BookDiscussion: {
             update: {
-              where: { postId: id },
-              data: {
-                bookId: book.id,
-              },
+              bookId: book.id,
             },
           },
         }),

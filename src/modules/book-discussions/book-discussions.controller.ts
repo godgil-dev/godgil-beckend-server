@@ -12,9 +12,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/auth/decorators/public.decorator';
-import UserRequest from 'src/auth/types/user-request.interface';
-import { OwnershipGuard } from 'src/posts/guards/ownership.guard';
+import { Public } from 'src/modules/auth/decorators/public.decorator';
+import UserRequest from 'src/modules/auth/types/user-request.interface';
+import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
 import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { BookDiscussionsService } from './book-discussions.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';

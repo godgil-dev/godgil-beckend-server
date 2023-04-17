@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import {
@@ -16,10 +24,10 @@ import UserRequest from './types/user-request.interface';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
   @Post('login')
   @HttpCode(200)
   @ApiCookieAuth('refreshToken')
+  @Public()
   async login(
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,

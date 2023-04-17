@@ -26,7 +26,7 @@ export class PostsService {
     }
 
     if (post.authorId !== user.id) {
-      throw new ForbiddenException('본인의 게시물만 수정할 수 있습니다.');
+      throw new ForbiddenException('본계정의 게시물이 아닙니다.');
     }
 
     return true;

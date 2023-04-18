@@ -1,15 +1,14 @@
-import { AuthService } from './auth/auth.service';
-import { Controller, Get, Post, Request } from '@nestjs/common';
-import { Public } from './auth/decorators/public.decorator';
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+import { Public } from './modules/auth/decorators/public.decorator';
 
 @Controller()
 export class AppController {
-  // constructor(private readonly appService: AppService) {}
-  constructor(private authService: AuthService) {}
+  constructor(private readonly appService: AppService) {}
 
   @Public()
   @Get('/')
-  async home(@Request() req) {
+  async home() {
     return 'hellow';
   }
 }

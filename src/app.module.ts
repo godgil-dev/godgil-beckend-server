@@ -1,30 +1,31 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { LoggerMiddleware } from './middlewares/logger.middleware';
-import { PrismaModule } from './prisma/prisma.module';
 import type { ClientOpts } from 'redis';
+import { APP_GUARD } from '@nestjs/core';
 import * as redisStore from 'cache-manager-redis-store';
-import { CacheModule } from '@nestjs/cache-manager';
-import { BookDiscussionsModule } from './book-discussions/book-discussions.module';
-import { CommentsModule } from './comments/comments.module';
-import { ProConDiscussionsModule } from './pro-con-discussions/pro-con-discussions.module';
-import { LikesModule } from './likes/likes.module';
+
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { BookDiscussionsModule } from './modules/book-discussions/book-discussions.module';
+import { ProConDiscussionsModule } from './modules/pro-con-discussions/pro-con-discussions.module';
+import { CommentsModule } from './modules/comments/comments.module';
+import { PostLikesModule } from './modules/post-likes/post-likes.module';
 import { AdminModule } from './admin/admin.module';
 
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
 @Module({
   imports: [
+    PrismaModule,
     AuthModule,
     UsersModule,
-    PrismaModule,
-    BookDiscussionsModule,
     CommentsModule,
+    BookDiscussionsModule,
     ProConDiscussionsModule,
-    LikesModule,
+    PostLikesModule,
     AdminModule,
     CacheModule.register<ClientOpts>({
       store: redisStore,

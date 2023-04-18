@@ -76,7 +76,6 @@ model Book {
   updatedAt   DateTime @updatedAt
 
   BookDiscussion BookDiscussion[]
-  PostLike       PostLike[]
 }
 
 model Post {
@@ -89,17 +88,18 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  User             User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  User             User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
   Comment          Comment[]
   CommentLike      CommentLike[]
-  BookDiscussion   BookDiscussion[]
-  ProConDiscussion ProConDiscussion[]
+  BookDiscussion   BookDiscussion?
+  ProConDiscussion ProConDiscussion?
   CommentDislike   CommentDislike[]
+  PostLike         PostLike[]
 }
 
 model BookDiscussion {
   id        Int      @id @default(autoincrement())
-  postId    Int
+  postId    Int      @unique
   bookId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,7 +110,7 @@ model BookDiscussion {
 
 model ProConDiscussion {
   id        Int      @id @default(autoincrement())
-  postId    Int
+  postId    Int      @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -122,13 +122,15 @@ model ProConDiscussion {
 model ProConVote {
   id                 Int      @id @default(autoincrement())
   userId             Int
-  proConDiscussionID Int
+  proConDiscussionId Int
   isAgree            Boolean
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  ProConDiscussion ProConDiscussion @relation(fields: [proConDiscussionID], references: [id], onDelete: Cascade)
+  ProConDiscussion ProConDiscussion @relation(fields: [proConDiscussionId], references: [id], onDelete: Cascade)
   User             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, proConDiscussionId])
 }
 
 model Comment {
@@ -180,11 +182,12 @@ model CommentDislike {
 model PostLike {
   id        Int      @id @default(autoincrement())
   userId    Int
-  bookId    Int
+  postId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Book      Book     @relation(fields: [bookId], references: [id])
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, bookId])
+  Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
 }

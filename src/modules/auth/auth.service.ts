@@ -26,7 +26,6 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException(`No user found for username: ${email}`);
     }
-    console.log(email, pass, user);
     // Step 2: Check if the password is correct
     const isPasswordValid = await bcrypt.compare(pass, user.password);
 
@@ -91,5 +90,14 @@ export class AuthService {
       return data;
     }
     return null;
+  }
+
+  async getUserFromToken(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token); // 토큰 유효성 검사
+      return await this.usersService.findOne(decoded.username); // 해당 유저 정보 반환
+    } catch (error) {
+      return null; // 토큰이 유효하지 않은 경우 null 반환
+    }
   }
 }

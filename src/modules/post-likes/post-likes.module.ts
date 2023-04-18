@@ -7,5 +7,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   controllers: [PostLikesController],
   providers: [PostLikesService],
   imports: [PrismaModule],
+  exports: [PostLikesService],
 })
 export class PostLikesModule {}

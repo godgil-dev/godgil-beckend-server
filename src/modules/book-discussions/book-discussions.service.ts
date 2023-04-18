@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
-import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
+import { Post, BookDiscussion, Book, Comment, PostLike } from '@prisma/client';
+
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Post, BookDiscussion, Book, Comment } from '@prisma/client';
 import { PostsService } from 'src/modules/posts/posts.service';
 import { BooksService } from '../books/books.service';
 import { CommentsService } from '../comments/comments.service';
+
+import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
+import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 
 @Injectable()
 export class BookDiscussionsService {
@@ -25,6 +27,7 @@ export class BookDiscussionsService {
       User: {
         username: string;
       };
+      PostLike: PostLike[];
     },
   ) {
     return {
@@ -38,6 +41,7 @@ export class BookDiscussionsService {
       updatedAt: post.updatedAt.toISOString(),
       book: post.BookDiscussion.Book,
       ...(post.Comment && { comments: post.Comment }),
+      isLikes: post.PostLike.length > 0 ? true : false,
     };
   }
 
@@ -71,42 +75,51 @@ export class BookDiscussionsService {
             username: true,
           },
         },
+        PostLike: {
+          where: {
+            userId: authorId,
+          },
+        },
       },
     });
 
     return { ...this.convertPostToReposnse(post), comments: [] };
   }
 
-  async findAll(limit: number, offset: number) {
-    const [posts, totalCount] = await this.prisma.$transaction([
-      this.prisma.post.findMany({
-        where: {
-          NOT: {
-            BookDiscussion: null,
+  async findAll(limit: number, offset: number, userId: number) {
+    const posts = await this.prisma.post.findMany({
+      where: {
+        NOT: {
+          BookDiscussion: null,
+        },
+      },
+      take: limit,
+      skip: offset,
+      include: {
+        BookDiscussion: {
+          include: {
+            Book: true,
           },
         },
-        take: limit,
-        skip: offset,
-        include: {
-          BookDiscussion: {
-            include: {
-              Book: true,
-            },
-          },
-          User: {
-            select: {
-              username: true,
-            },
+        User: {
+          select: {
+            username: true,
           },
         },
-      }),
-      this.prisma.bookDiscussion.count(),
-    ]);
+        PostLike: {
+          where: {
+            userId,
+          },
+        },
+      },
+    });
+    console.log(posts);
+    const totalCount = await this.prisma.bookDiscussion.count();
 
     return { posts: posts.map(this.convertPostToReposnse), totalCount };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
     const post = await this.prisma.post.findUnique({
       where: {
         id,
@@ -122,6 +135,11 @@ export class BookDiscussionsService {
             username: true,
           },
         },
+        PostLike: {
+          where: {
+            userId,
+          },
+        },
       },
     });
 
@@ -130,7 +148,11 @@ export class BookDiscussionsService {
     return { ...this.convertPostToReposnse(post), comments };
   }
 
-  async update(id: number, updateBookDiscussionDto: UpdateBookDiscussionDto) {
+  async update(
+    id: number,
+    userId: number,
+    updateBookDiscussionDto: UpdateBookDiscussionDto,
+  ) {
     let book = null;
 
     if (updateBookDiscussionDto.book) {
@@ -165,6 +187,11 @@ export class BookDiscussionsService {
         User: {
           select: {
             username: true,
+          },
+        },
+        PostLike: {
+          where: {
+            userId,
           },
         },
       },

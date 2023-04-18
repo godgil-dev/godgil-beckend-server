@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -6,6 +10,12 @@ export class PostLikesService {
   constructor(private prisma: PrismaService) {}
 
   async create(postId: number, userId: number) {
+    const postLike = await this.findOne(postId, userId);
+    console.log(postLike);
+    if (postLike) {
+      throw new ConflictException('이미 좋아요한 게시글입니다.');
+    }
+
     return await this.prisma.postLike.create({
       data: {
         userId,

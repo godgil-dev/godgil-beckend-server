@@ -22,7 +22,7 @@ export class PostLikesController {
     @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
   ) {
-    return await this.postLikesService.create(postId, Number(request.user.id));
+    return await this.postLikesService.create(postId, request.user.id);
   }
 
   @Delete()
@@ -32,6 +32,6 @@ export class PostLikesController {
     @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
   ) {
-    await this.postLikesService.remove(postId, Number(request.user.id));
+    await this.postLikesService.remove(postId, request.user.id);
   }
 }

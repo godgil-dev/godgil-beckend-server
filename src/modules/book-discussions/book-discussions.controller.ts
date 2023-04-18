@@ -10,6 +10,7 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
@@ -89,22 +90,23 @@ export class BookDiscussionsController {
   @ApiBearerAuth()
   @Patch(':id')
   @UseGuards(OwnershipGuard)
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookDiscussionDto: UpdateBookDiscussionDto,
     @Req() request: UserRequest,
   ) {
-    return this.bookDiscussionsService.update(
+    return await this.bookDiscussionsService.update(
       id,
       request.user.id,
       updateBookDiscussionDto,
     );
   }
 
+  @HttpCode(204)
   @ApiBearerAuth()
   @Delete(':id')
   @UseGuards(OwnershipGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.bookDiscussionsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.bookDiscussionsService.remove(id);
   }
 }

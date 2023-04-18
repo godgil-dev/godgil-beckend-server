@@ -46,7 +46,6 @@ const authenticate = async (email: string, password: string) => {
         // `_baseDmmf` contains necessary Model metadata but it is a private method
         // so it isn't included in PrismaClient type
         const dmmf = (prisma as any)._baseDmmf as DMMFClass;
-        console.log(dmmf);
         return {
           adminJsOptions: {
             rootPath: '/admin',

@@ -21,12 +21,18 @@ export class CommentsService {
       User: {
         username: string;
       };
+      _count: {
+        CommentLike: number;
+        CommentDislike: number;
+      };
     },
   ) {
     return {
       id: comments.id,
       author: comments.User.username,
       content: comments.content,
+      like: comments._count.CommentDislike,
+      dislike: comments._count.CommentLike,
       createdAt: comments.createdAt.toISOString(),
       updatedAt: comments.updatedAt.toISOString(),
     };
@@ -75,7 +81,28 @@ export class CommentsService {
     return this.prisma.comment.findUnique({ where: { id } });
   }
 
-  async findAllByPostId(postId: number, limit: number, offset: number) {
+  async findAllByPostId(postId: number) {
+    const comments = await this.prisma.comment.findMany({
+      where: { postId },
+      include: {
+        User: {
+          select: {
+            username: true,
+          },
+        },
+        _count: {
+          select: {
+            CommentLike: true,
+            CommentDislike: true,
+          },
+        },
+      },
+    });
+
+    return comments.map(this.convertPostToReposnse);
+  }
+
+  async findAllByPostIdPages(postId: number, limit: number, offset: number) {
     const comments = await this.prisma.comment.findMany({
       where: { postId },
       take: limit,

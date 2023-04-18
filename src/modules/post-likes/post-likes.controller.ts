@@ -8,7 +8,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { PostLikesService } from './post-likes.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import UserRequest from '../auth/types/user-request.interface';
 
 @ApiTags('likes')
@@ -17,6 +17,7 @@ export class PostLikesController {
   constructor(private readonly postLikesService: PostLikesService) {}
 
   @Post()
+  @ApiBearerAuth()
   async create(
     @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
@@ -25,6 +26,7 @@ export class PostLikesController {
   }
 
   @Delete()
+  @ApiBearerAuth()
   @HttpCode(204)
   async remove(
     @Param('postId', ParseIntPipe) postId: number,

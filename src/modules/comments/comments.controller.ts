@@ -67,11 +67,12 @@ export class CommentsController {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
 
-    const { comments, totalCount } = await this.commentsService.findAllByPostId(
-      Number(postId),
-      Number(limit),
-      offset,
-    );
+    const { comments, totalCount } =
+      await this.commentsService.findAllByPostIdPages(
+        Number(postId),
+        Number(limit),
+        offset,
+      );
 
     return {
       comments,

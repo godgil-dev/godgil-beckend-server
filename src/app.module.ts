@@ -17,6 +17,7 @@ import { AdminModule } from './admin/admin.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
+import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
 @Module({
   imports: [
     PrismaModule,
@@ -27,6 +28,7 @@ import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
     ProConDiscussionsModule,
     PostLikesModule,
     AdminModule,
+
     CacheModule.register<ClientOpts>({
       store: redisStore,
 
@@ -40,6 +42,7 @@ import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
   controllers: [AppController],
   providers: [
     AppService,
+    JwtStrategy,
     Logger,
     {
       provide: APP_GUARD,

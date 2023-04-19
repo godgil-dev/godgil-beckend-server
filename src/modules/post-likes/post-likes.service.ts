@@ -11,7 +11,7 @@ export class PostLikesService {
 
   async create(postId: number, userId: number) {
     const postLike = await this.findOne(postId, userId);
-    console.log(postLike);
+
     if (postLike) {
       throw new ConflictException('이미 좋아요한 게시글입니다.');
     }
@@ -43,7 +43,7 @@ export class PostLikesService {
   }
 
   async remove(postId: number, userId: number) {
-    const postLike = this.findOne(postId, userId);
+    const postLike = await this.findOne(postId, userId);
 
     if (!postLike) {
       throw new NotFoundException('게시글 좋아요를 찾을 수 없습니다.');

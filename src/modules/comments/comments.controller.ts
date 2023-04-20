@@ -48,7 +48,7 @@ export class CommentsController {
     return this.commentsService.create(
       createCommentDto,
       postId,
-      Number(request.user.id),
+      request.user.id,
     );
   }
 
@@ -97,8 +97,13 @@ export class CommentsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCommentDto: UpdateCommentDto,
+    @Req() request: UserRequest,
   ) {
-    return await this.commentsService.update(updateCommentDto, id);
+    return await this.commentsService.update(
+      updateCommentDto,
+      id,
+      request.user.id,
+    );
   }
 
   @HttpCode(204)

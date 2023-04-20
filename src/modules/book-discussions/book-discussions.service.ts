@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Post, BookDiscussion, Book, Comment, PostLike } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -41,7 +41,7 @@ export class BookDiscussionsService {
       updatedAt: post.updatedAt.toISOString(),
       book: post.BookDiscussion.Book,
       ...(post.Comment && { comments: post.Comment }),
-      isLikes: post.PostLike.length > 0 ? true : false,
+      postLikedByUser: post.PostLike.length > 0 ? true : false,
     };
   }
 
@@ -113,7 +113,6 @@ export class BookDiscussionsService {
         },
       },
     });
-    console.log(posts);
     const totalCount = await this.prisma.bookDiscussion.count();
 
     return { posts: posts.map(this.convertPostToReposnse), totalCount };
@@ -143,7 +142,11 @@ export class BookDiscussionsService {
       },
     });
 
-    const comments = await this.commentsService.findAllByPostId(id);
+    if (!post.BookDiscussion) {
+      throw new BadRequestException('독서 토론 형태의 게시물이 아닙니다');
+    }
+
+    const comments = await this.commentsService.findAllByPostId(id, userId);
 
     return { ...this.convertPostToReposnse(post), comments };
   }
@@ -197,7 +200,9 @@ export class BookDiscussionsService {
       },
     });
 
-    return this.convertPostToReposnse(post);
+    const comments = await this.commentsService.findAllByPostId(id, userId);
+
+    return { ...this.convertPostToReposnse(post), comments };
   }
 
   async remove(id: number) {

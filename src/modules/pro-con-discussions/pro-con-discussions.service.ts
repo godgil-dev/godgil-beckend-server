@@ -5,8 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Post, ProConDiscussion, ProConVote, Comment } from '@prisma/client';
+import { Post, ProConDiscussion, ProConVote } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CommentsService } from '../comments/comments.service';
 import { PostsService } from '../posts/posts.service';
 import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
 import { CreateProConDiscussionDto } from './dto/create-pro-con-discussion.dto';
@@ -16,9 +17,11 @@ import { UpdateProConDiscussionDto } from './dto/update-pro-con-discussion.dto';
 export class ProConDiscussionsService {
   constructor(
     private prisma: PrismaService,
+    private postService: PostsService,
     @Inject(forwardRef(() => ProConVoteService))
     private proConVoteService: ProConVoteService,
-    private postService: PostsService,
+    @Inject(forwardRef(() => CommentsService))
+    private commentsService: CommentsService,
   ) {}
 
   async convertPostToReposnse(
@@ -29,7 +32,6 @@ export class ProConDiscussionsService {
       User: {
         username: string;
       };
-      Comment: Comment[];
     },
   ) {
     const agreeCount = await this.proConVoteService.agreeCount(
@@ -53,7 +55,6 @@ export class ProConDiscussionsService {
       disagreeCount,
       agreeUser: firstAgree?.User?.username || null,
       disagreeUser: firstDisagree?.User?.username || null,
-      comments: post.Comment || [],
     };
   }
 
@@ -88,13 +89,12 @@ export class ProConDiscussionsService {
             username: true,
           },
         },
-        Comment: true,
       },
     });
 
-    console.log(post);
+    const response = await this.convertPostToReposnse(post);
 
-    return this.convertPostToReposnse(post);
+    return { ...response, comments: [] };
   }
 
   //ToDo: 대표 두명, 찬반 카운트
@@ -120,33 +120,7 @@ export class ProConDiscussionsService {
     });
 
     const totalCount = await this.prisma.proConDiscussion.count();
-    const convertPostToReposnse = posts.map(async (post) => {
-      const agreeCount = await this.proConVoteService.agreeCount(
-        post.ProConDiscussion.id,
-      );
-      const disagreeCount = await this.proConVoteService.disagreeCount(
-        post.ProConDiscussion.id,
-      );
-      const [firstAgree, firstDisagree] =
-        await this.proConVoteService.findFirstVoteUsers(
-          post.ProConDiscussion.id,
-        );
-
-      return {
-        id: post.id,
-        author: post.User.username,
-        title: post.title,
-        content: post.content,
-        views: post.views,
-        thumbup: post.thumbup,
-        createdAt: post.createdAt.toISOString(),
-        updatedAt: post.updatedAt.toISOString(),
-        agreeCount,
-        disagreeCount,
-        agreeUser: firstAgree?.User?.username || null,
-        disagreeUser: firstDisagree?.User?.username || null,
-      };
-    });
+    const convertPostToReposnse = posts.map(this.convertPostToReposnse);
 
     return {
       posts: await Promise.all(convertPostToReposnse),
@@ -154,7 +128,7 @@ export class ProConDiscussionsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
     const post = await this.prisma.post.findUnique({
       where: {
         id,
@@ -170,14 +144,17 @@ export class ProConDiscussionsService {
             username: true,
           },
         },
-        Comment: true,
       },
     });
 
     if (!post.ProConDiscussion) {
       throw new BadRequestException('찬성반대 토론 형태의 게시물이 아닙니다');
     }
-    return this.convertPostToReposnse(post);
+
+    const response = await this.convertPostToReposnse(post);
+    const comments = await this.commentsService.findAllByPostId(id, userId);
+
+    return { ...response, comments };
   }
 
   async findOneByPostId(postId: number) {
@@ -205,11 +182,8 @@ export class ProConDiscussionsService {
     { title, content, isAgree }: UpdateProConDiscussionDto,
     authorId: number,
   ) {
-    console.log(title);
     if (isAgree !== undefined) {
-      console.log(
-        await this.proConVoteService.update({ isAgree }, authorId, id),
-      );
+      await this.proConVoteService.update({ isAgree }, authorId, id);
     }
 
     const post = await this.prisma.post.update({
@@ -235,11 +209,12 @@ export class ProConDiscussionsService {
             username: true,
           },
         },
-        Comment: true,
       },
     });
 
-    return this.convertPostToReposnse(post);
+    const response = await this.convertPostToReposnse(post);
+    const comments = await this.commentsService.findAllByPostId(id, authorId);
+    return { ...response, comments };
   }
 
   remove(id: number) {

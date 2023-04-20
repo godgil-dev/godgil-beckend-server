@@ -53,8 +53,6 @@ export class BookDiscussionsController {
   ) {
     const token = request.headers.authorization?.replace('Bearer ', '');
     const user = await this.authService.getUserFromToken(token);
-
-    console.log(user);
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
 
@@ -77,6 +75,7 @@ export class BookDiscussionsController {
 
   @Public()
   @Get(':id')
+  @ApiBearerAuth()
   async findOne(
     @Param('id', ParseIntPipe) id: number,
     @Req() request: UserRequest,

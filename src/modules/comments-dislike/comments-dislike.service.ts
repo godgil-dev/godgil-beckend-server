@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -18,6 +19,11 @@ export class CommentsDislikeService {
 
   async create(createCommentsDislikeDto: CreateCommentsDislikeDto) {
     const { commentId, userId } = createCommentsDislikeDto;
+    const commentDislike = await this.findOne(commentId, userId);
+
+    if (commentDislike) {
+      throw new ConflictException('이미 싫어요한 댓글입니다.');
+    }
 
     await this.commentsLikeService.findAndRemove(commentId, userId);
 
@@ -54,7 +60,7 @@ export class CommentsDislikeService {
   }
 
   async removeThrow(commentId: number, userId: number) {
-    const commentDislike = await this.findOne(userId, commentId);
+    const commentDislike = await this.findOne(commentId, userId);
 
     if (!commentDislike) {
       throw new NotFoundException('CommentDislike not found');

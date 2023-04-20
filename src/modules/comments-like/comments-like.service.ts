@@ -1,5 +1,6 @@
 import { CommentsDislikeService } from '../comments-dislike/comments-dislike.service';
 import {
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -18,6 +19,12 @@ export class CommentsLikeService {
 
   async create(createCommentsLikeDto: CreateCommentsLikeDto) {
     const { commentId, userId } = createCommentsLikeDto;
+
+    const commentLike = await this.findOne(commentId, userId);
+
+    if (commentLike) {
+      throw new ConflictException('이미 좋아요한 댓글입니다.');
+    }
 
     await this.commentsDislikeService.findAndRemove(commentId, userId);
 
@@ -56,7 +63,7 @@ export class CommentsLikeService {
   }
 
   async removeThrow(commentId: number, userId: number) {
-    const commentLike = await await this.findOne(userId, commentId);
+    const commentLike = await this.findOne(commentId, userId);
 
     if (!commentLike) {
       throw new NotFoundException('CommentLike not found');

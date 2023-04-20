@@ -6,18 +6,20 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Comment, User } from '@prisma/client';
+import { Comment, User, CommentLike, CommentDislike } from '@prisma/client';
 import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
+import { PostsService } from 'src/modules/posts/posts.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private proConVoteService: ProConVoteService,
+    private postsService: PostsService,
   ) {}
 
   convertPostToReposnse(
-    comments: Comment & {
+    comment: Comment & {
       User: {
         username: string;
       };
@@ -25,16 +27,23 @@ export class CommentsService {
         CommentLike: number;
         CommentDislike: number;
       };
+      CommentLike: CommentLike[];
+      CommentDislike: CommentDislike[];
     },
+    userId: number,
   ) {
     return {
-      id: comments.id,
-      author: comments.User.username,
-      content: comments.content,
-      like: comments._count.CommentDislike,
-      dislike: comments._count.CommentLike,
-      createdAt: comments.createdAt.toISOString(),
-      updatedAt: comments.updatedAt.toISOString(),
+      id: comment.id,
+      author: comment.User.username,
+      content: comment.content,
+      like: comment._count.CommentDislike,
+      dislike: comment._count.CommentLike,
+      createdAt: comment.createdAt.toISOString(),
+      updatedAt: comment.updatedAt.toISOString(),
+      likedByUser: comment.CommentLike.some((like) => like.userId === userId),
+      dislikedBytUser: comment.CommentDislike.some(
+        (dislike) => dislike.userId === userId,
+      ),
     };
   }
 
@@ -81,7 +90,7 @@ export class CommentsService {
     return this.prisma.comment.findUnique({ where: { id } });
   }
 
-  async findAllByPostId(postId: number) {
+  async findAllByPostId(postId: number, userId: number) {
     const comments = await this.prisma.comment.findMany({
       where: { postId },
       include: {
@@ -96,10 +105,14 @@ export class CommentsService {
             CommentDislike: true,
           },
         },
+        CommentLike: { where: { userId } },
+        CommentDislike: { where: { userId } },
       },
     });
 
-    return comments.map(this.convertPostToReposnse);
+    return comments.map((comment) =>
+      this.convertPostToReposnse(comment, userId),
+    );
   }
 
   async findAllByPostIdPages(postId: number, limit: number, offset: number) {
@@ -121,7 +134,7 @@ export class CommentsService {
     return { comments: comments.map(this.convertPostToReposnse), totalCount };
   }
 
-  async update(updateCommentDto: UpdateCommentDto, id: number) {
+  async update(updateCommentDto: UpdateCommentDto, id: number, userId: number) {
     const comment = await this.prisma.comment.update({
       where: { id },
       data: updateCommentDto,
@@ -137,8 +150,21 @@ export class CommentsService {
             CommentDislike: true,
           },
         },
+        CommentLike: {
+          where: { userId },
+          select: { id: true },
+        },
+        CommentDislike: {
+          where: { userId },
+          select: { id: true },
+        },
       },
     });
+
+    const proConVote = await this.proConVoteService.findOneByUserIdAndPostId(
+      comment.authorId,
+      comment.postId,
+    );
 
     return {
       author: comment.User.username,
@@ -147,6 +173,9 @@ export class CommentsService {
       dislike: comment._count.CommentLike,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
+      ...(proConVote && {
+        isAgree: proConVote.isAgree,
+      }),
     };
   }
 

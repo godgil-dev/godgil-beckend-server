@@ -11,7 +11,13 @@ export class PostsService {
   constructor(private prisma: PrismaService) {}
 
   async findOne(id: number) {
-    return this.prisma.post.findUnique({ where: { id } });
+    return this.prisma.post.findUnique({
+      where: { id },
+      include: {
+        ProConDiscussion: true,
+        BookDiscussion: true,
+      },
+    });
   }
 
   async remove(id: number) {

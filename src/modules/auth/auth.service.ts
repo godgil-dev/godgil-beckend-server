@@ -59,6 +59,13 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async logout(user: any) {
+    const refreshTokenKey = `refreshToken:${user.id}`;
+
+    // Delete the refresh token from the cache
+    await this.cache.del(refreshTokenKey);
+  }
+
   async refresh(refreshToken: string, user: any) {
     const refreshTokenKey = `refreshToken:${user.id}`;
     const storeRefreshToken = await this.getRefreshTokenFromKey(

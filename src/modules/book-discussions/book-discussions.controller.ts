@@ -57,7 +57,7 @@ export class BookDiscussionsController {
     const offset = (page - 1) * limit;
 
     const { posts, totalCount } = await this.bookDiscussionsService.findAll(
-      Number(limit),
+      limit,
       offset,
       user?.id || -1,
     );

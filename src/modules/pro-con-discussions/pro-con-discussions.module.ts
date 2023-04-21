@@ -14,8 +14,8 @@ import { AuthModule } from '../auth/auth.module';
     PrismaModule,
     PostsModule,
     AuthModule,
+    ProConVoteModule,
     forwardRef(() => CommentsModule),
-    forwardRef(() => ProConVoteModule),
   ],
   exports: [ProConDiscussionsService],
 })

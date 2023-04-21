@@ -18,11 +18,12 @@ export class ProConDiscussionsService {
   constructor(
     private prisma: PrismaService,
     private postService: PostsService,
-    @Inject(forwardRef(() => ProConVoteService))
     private proConVoteService: ProConVoteService,
     @Inject(forwardRef(() => CommentsService))
     private commentsService: CommentsService,
-  ) {}
+  ) {
+    this.convertPostToReposnse = this.convertPostToReposnse.bind(this);
+  }
 
   async convertPostToReposnse(
     post: Post & {
@@ -37,6 +38,7 @@ export class ProConDiscussionsService {
     const agreeCount = await this.proConVoteService.agreeCount(
       post.ProConDiscussion.id,
     );
+
     const disagreeCount = await this.proConVoteService.disagreeCount(
       post.ProConDiscussion.id,
     );

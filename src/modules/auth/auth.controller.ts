@@ -35,7 +35,7 @@ export class AuthController {
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.login(
+    const { accessToken, refreshToken, payload } = await this.authService.login(
       email,
       password,
     );
@@ -48,7 +48,11 @@ export class AuthController {
       httpOnly: true,
     });
 
-    response.json({ message: '로그인 성공' });
+    response.json({
+      username: payload.username,
+      avatarUrl: payload.avatarUrl,
+      role: payload.role.name,
+    });
   }
 
   @Post('token')

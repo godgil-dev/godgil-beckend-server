@@ -5,5 +5,5 @@ export class CreateProConVoteDto {
   @IsBoolean()
   @IsNotEmpty()
   @ApiProperty()
-  isAgree: boolean;
+  isPro: boolean;
 }

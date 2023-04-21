@@ -10,7 +10,7 @@ declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {});
   // app.setGlobalPrefix('v1');
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.use(
     helmet({
@@ -43,7 +43,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(3001);
 
   if (module.hot) {
     module.hot.accept();

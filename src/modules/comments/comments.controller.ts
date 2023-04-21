@@ -68,11 +68,7 @@ export class CommentsController {
     const offset = (page - 1) * limit;
 
     const { comments, totalCount } =
-      await this.commentsService.findAllByPostIdPages(
-        Number(postId),
-        Number(limit),
-        offset,
-      );
+      await this.commentsService.findAllByPostIdPages(postId, limit, offset);
 
     return {
       comments,

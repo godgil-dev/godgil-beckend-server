@@ -52,12 +52,12 @@ export class ProConDiscussionsController {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
     const { posts, totalCount } = await this.proConDiscussionsService.findAll(
-      Number(limit),
+      limit,
       offset,
     );
     return {
       posts,
-      pagesInfo: {
+      pageInfo: {
         page,
         totalCount,
         currentCount: posts.length,

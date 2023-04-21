@@ -6,5 +6,5 @@ export class CreateProConDiscussionDto extends CreatePostDto {
   @ApiProperty()
   @IsBoolean()
   @IsNotEmpty()
-  isAgree: boolean;
+  isPro: boolean;
 }

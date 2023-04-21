@@ -35,14 +35,14 @@ export class ProConDiscussionsService {
       };
     },
   ) {
-    const agreeCount = await this.proConVoteService.agreeCount(
+    const proCount = await this.proConVoteService.proCount(
       post.ProConDiscussion.id,
     );
 
-    const disagreeCount = await this.proConVoteService.disagreeCount(
+    const conCount = await this.proConVoteService.conCount(
       post.ProConDiscussion.id,
     );
-    const [firstAgree, firstDisagree] =
+    const [firstPro, firstCon] =
       await this.proConVoteService.findFirstVoteUsers(post.ProConDiscussion.id);
 
     return {
@@ -53,15 +53,25 @@ export class ProConDiscussionsService {
       views: post.views,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
-      agreeCount,
-      disagreeCount,
-      agreeUser: firstAgree?.User?.username || null,
-      disagreeUser: firstDisagree?.User?.username || null,
+      proCount,
+      conCount,
+      proSideUser: firstPro?.User
+        ? {
+            username: firstPro.User.username,
+            avatarUrl: firstPro.User.avatarUrl,
+          }
+        : null,
+      conSideUser: firstCon?.User
+        ? {
+            username: firstCon.User.username,
+            avatarUrl: firstCon.User.avatarUrl,
+          }
+        : null,
     };
   }
 
   async create(
-    { title, content, isAgree }: CreateProConDiscussionDto,
+    { title, content, isPro }: CreateProConDiscussionDto,
     authorId: number,
   ) {
     const post = await this.prisma.post.create({
@@ -73,7 +83,7 @@ export class ProConDiscussionsService {
           create: {
             ProConVote: {
               create: {
-                isAgree,
+                isPro,
                 userId: authorId,
               },
             },
@@ -181,11 +191,11 @@ export class ProConDiscussionsService {
 
   async update(
     id: number,
-    { title, content, isAgree }: UpdateProConDiscussionDto,
+    { title, content, isPro }: UpdateProConDiscussionDto,
     authorId: number,
   ) {
-    if (isAgree !== undefined) {
-      await this.proConVoteService.update({ isAgree }, authorId, id);
+    if (isPro !== undefined) {
+      await this.proConVoteService.update({ isPro }, authorId, id);
     }
 
     const post = await this.prisma.post.update({

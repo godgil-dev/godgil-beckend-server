@@ -11,11 +11,7 @@ export class ProConVoteService {
     private proConDiscussionsHelperService: ProConDiscussionsHelperService,
   ) {}
 
-  async create(
-    { isAgree }: CreateProConVoteDto,
-    userId: number,
-    postId: number,
-  ) {
+  async create({ isPro }: CreateProConVoteDto, userId: number, postId: number) {
     const proConDiscussions =
       await this.proConDiscussionsHelperService.findOneByPostIdThrow(postId);
 
@@ -30,13 +26,13 @@ export class ProConVoteService {
 
     const proConVote = await this.prisma.proConVote.create({
       data: {
-        isAgree,
+        isPro,
         userId,
         proConDiscussionId: proConDiscussions.id,
       },
     });
 
-    return { isAgree: proConVote.isAgree };
+    return { isPro: proConVote.isPro };
   }
 
   async findExistingVote(userId: number, proConDiscussionId: number) {
@@ -66,16 +62,17 @@ export class ProConVoteService {
     });
   }
 
-  async findFirstAgree(proConDiscussionId: number) {
+  async findFirstPro(proConDiscussionId: number) {
     return await this.prisma.proConVote.findFirst({
       where: {
         proConDiscussionId,
-        isAgree: true,
+        isPro: true,
       },
       select: {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
       },
@@ -85,16 +82,17 @@ export class ProConVoteService {
     });
   }
 
-  async findFirstDisagree(proConDiscussionId: number) {
+  async findFirstCon(proConDiscussionId: number) {
     return await this.prisma.proConVote.findFirst({
       where: {
         proConDiscussionId,
-        isAgree: false,
+        isPro: false,
       },
       select: {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
       },
@@ -105,17 +103,13 @@ export class ProConVoteService {
   }
 
   async findFirstVoteUsers(proConDiscussionId: number) {
-    const firstAgree = await this.findFirstAgree(proConDiscussionId);
-    const firstDisagree = await this.findFirstDisagree(proConDiscussionId);
+    const firstPro = await this.findFirstPro(proConDiscussionId);
+    const firstCon = await this.findFirstCon(proConDiscussionId);
 
-    return [firstAgree, firstDisagree];
+    return [firstPro, firstCon];
   }
 
-  async update(
-    { isAgree }: UpdateProConVoteDto,
-    userId: number,
-    postId: number,
-  ) {
+  async update({ isPro }: UpdateProConVoteDto, userId: number, postId: number) {
     const proConDiscussions =
       await this.proConDiscussionsHelperService.findOneByPostIdThrow(postId);
 
@@ -127,11 +121,11 @@ export class ProConVoteService {
         },
       },
       data: {
-        isAgree,
+        isPro,
       },
     });
 
-    return { isAgree: proConVote.isAgree };
+    return { isPro: proConVote.isPro };
   }
 
   //Todo: 댓글을 다 삭제하면 지울 수 있도록 구현 필요
@@ -139,20 +133,20 @@ export class ProConVoteService {
     return `This action removes a #${id} proConVote`;
   }
 
-  async agreeCount(proConDiscussionId: number) {
+  async proCount(proConDiscussionId: number) {
     return await this.prisma.proConVote.count({
       where: {
         proConDiscussionId,
-        isAgree: true,
+        isPro: true,
       },
     });
   }
 
-  async disagreeCount(proConDiscussionId: number) {
+  async conCount(proConDiscussionId: number) {
     return await this.prisma.proConVote.count({
       where: {
         proConDiscussionId,
-        isAgree: false,
+        isPro: false,
       },
     });
   }

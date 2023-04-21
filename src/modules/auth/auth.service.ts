@@ -56,7 +56,7 @@ export class AuthService {
       parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME),
     );
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, payload };
   }
 
   async logout(user: any) {

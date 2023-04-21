@@ -55,8 +55,18 @@ export class ProConDiscussionsService {
       updatedAt: post.updatedAt.toISOString(),
       proCount,
       conCount,
-      proSideUser: firstPro?.User?.username || null,
-      conSideUser: firstCon?.User?.username || null,
+      proSideUser: firstPro?.User
+        ? {
+            username: firstPro.User.username,
+            avatarUrl: firstPro.User.avatarUrl,
+          }
+        : null,
+      conSideUser: firstCon?.User
+        ? {
+            username: firstCon.User.username,
+            avatarUrl: firstCon.User.avatarUrl,
+          }
+        : null,
     };
   }
 

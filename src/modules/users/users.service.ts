@@ -32,7 +32,10 @@ export class UsersService {
   }
 
   findOneByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { role: true },
+    });
   }
 
   findOneById(id: number) {

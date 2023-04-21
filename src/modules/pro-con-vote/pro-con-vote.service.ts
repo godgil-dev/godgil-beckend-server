@@ -1,11 +1,6 @@
-import {
-  ConflictException,
-  forwardRef,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ProConDiscussionsService } from './../pro-con-discussions/pro-con-discussions.service';
+import { ProConDiscussionsHelperService } from '../pro-con-discussions-helper/pro-con-discussions-helper.service';
 import { CreateProConVoteDto } from './dto/create-pro-con-vote.dto';
 import { UpdateProConVoteDto } from './dto/update-pro-con-vote.dto';
 
@@ -13,8 +8,7 @@ import { UpdateProConVoteDto } from './dto/update-pro-con-vote.dto';
 export class ProConVoteService {
   constructor(
     private prisma: PrismaService,
-    @Inject(forwardRef(() => ProConDiscussionsService))
-    private proConDiscussionsService: ProConDiscussionsService,
+    private proConDiscussionsHelperService: ProConDiscussionsHelperService,
   ) {}
 
   async create(
@@ -23,7 +17,7 @@ export class ProConVoteService {
     postId: number,
   ) {
     const proConDiscussions =
-      await this.proConDiscussionsService.findOneByPostIdThrow(postId);
+      await this.proConDiscussionsHelperService.findOneByPostIdThrow(postId);
 
     const existProConVote = await this.findExistingVote(
       userId,
@@ -56,7 +50,7 @@ export class ProConVoteService {
 
   async findOneByUserIdAndPostId(userId: number, postId: number) {
     const proConDiscussions =
-      await this.proConDiscussionsService.findOneByPostId(postId);
+      await this.proConDiscussionsHelperService.findOneByPostId(postId);
 
     if (!proConDiscussions) {
       return null;
@@ -123,7 +117,7 @@ export class ProConVoteService {
     postId: number,
   ) {
     const proConDiscussions =
-      await this.proConDiscussionsService.findOneByPostIdThrow(postId);
+      await this.proConDiscussionsHelperService.findOneByPostIdThrow(postId);
 
     const proConVote = await this.prisma.proConVote.update({
       where: {

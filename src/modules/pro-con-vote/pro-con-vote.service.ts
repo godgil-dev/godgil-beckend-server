@@ -72,6 +72,7 @@ export class ProConVoteService {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
       },
@@ -91,6 +92,7 @@ export class ProConVoteService {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
       },

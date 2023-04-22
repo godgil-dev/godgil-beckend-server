@@ -21,6 +21,8 @@ import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
 import { ProConDiscussionsHelperService } from './modules/pro-con-discussions-helper/pro-con-discussions-helper.service';
 import { AppService } from './app.service';
 import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-proxy.guard';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -32,6 +34,10 @@ import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-prox
     ProConDiscussionsModule,
     PostLikesModule,
     AdminModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
 
     CacheModule.register<ClientOpts>({
       store: redisStore,

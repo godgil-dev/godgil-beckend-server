@@ -42,7 +42,7 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async update(username: string, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     if (updateUserDto.password) {
       updateUserDto.password = await bcrypt.hash(
         updateUserDto.password,
@@ -51,12 +51,12 @@ export class UsersService {
     }
 
     return this.prisma.user.update({
-      where: { username },
+      where: { id },
       data: updateUserDto,
     });
   }
 
-  remove(username: string) {
-    return this.prisma.user.delete({ where: { username } });
+  remove(id: number) {
+    return this.prisma.user.delete({ where: { id } });
   }
 }

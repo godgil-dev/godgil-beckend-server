@@ -4,15 +4,26 @@ import {
   Post,
   Body,
   Patch,
-  Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
-import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from './multer-config';
+import UserRequest from '../auth/types/user-request.interface';
 
 @Controller('users')
 @ApiTags('users')
@@ -35,29 +46,59 @@ export class UsersController {
     return users.map((user) => new UserEntity(user));
   }
 
-  @Get(':username')
+  @Get()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
-  async findOne(@Param('username') username: string) {
-    return new UserEntity(await this.usersService.findOne(username));
+  async findOne(@Req() request: UserRequest) {
+    return new UserEntity(await this.usersService.findOneById(request.user.id));
   }
 
-  @Patch(':username')
+  @Patch()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
   async update(
-    @Param('username') username: string,
+    @Req() request: UserRequest,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return new UserEntity(
-      await this.usersService.update(username, updateUserDto),
+      await this.usersService.update(request.user.id, updateUserDto),
     );
   }
 
-  @Delete(':username')
+  @Delete()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
-  async remove(@Param('username') username: string) {
-    return new UserEntity(await this.usersService.remove(username));
+  async remove(@Req() request: UserRequest) {
+    return new UserEntity(await this.usersService.remove(request.user.id));
+  }
+
+  @Patch('/avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    required: true,
+    type: 'multipart/form-data',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async uploadFile(
+    @Req() request: UserRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const avatarUrl = `uploads/${file.filename}`;
+    const user = await this.usersService.update(request.user.id, { avatarUrl });
+    const host = request.protocol + '://' + request.get('host');
+
+    return {
+      avatarUrl: `${host}/${user.avatarUrl}`,
+    };
   }
 }

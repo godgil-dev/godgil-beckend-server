@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Patch,
-  Param,
   Delete,
   UseInterceptors,
   UploadedFile,
@@ -96,9 +95,10 @@ export class UsersController {
   ) {
     const avatarUrl = `uploads/${file.filename}`;
     const user = await this.usersService.update(request.user.id, { avatarUrl });
+    const host = request.protocol + '://' + request.get('host');
 
     return {
-      avatarUrl: user.avatarUrl,
+      avatarUrl: `${host}/${user.avatarUrl}`,
     };
   }
 }

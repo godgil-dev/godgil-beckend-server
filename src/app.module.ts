@@ -1,9 +1,9 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { CacheModule } from '@nestjs/cache-manager';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import type { ClientOpts } from 'redis';
 import { APP_GUARD } from '@nestjs/core';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AppController } from './app.controller';
+import type { ClientOpts } from 'redis';
 import * as redisStore from 'cache-manager-redis-store';
 
 import { PrismaModule } from './prisma/prisma.module';
@@ -18,6 +18,10 @@ import { AdminModule } from './admin/admin.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
 import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
+import { ProConDiscussionsHelperService } from './modules/pro-con-discussions-helper/pro-con-discussions-helper.service';
+import { AppService } from './app.service';
+import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-proxy.guard';
+
 @Module({
   imports: [
     PrismaModule,
@@ -31,12 +35,15 @@ import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
 
     CacheModule.register<ClientOpts>({
       store: redisStore,
-
-      // Store-specific configuration:
       host: process.env.REDIS_HOST,
       port: parseInt(process.env.REDIS_PORT),
       password: process.env.REDIS_PASSWORD,
       isGlobal: true,
+    }),
+
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 20,
     }),
   ],
   controllers: [AppController],
@@ -44,10 +51,12 @@ import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
     AppService,
     JwtStrategy,
     Logger,
+    ThrottlerBehindProxyGuard,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    ProConDiscussionsHelperService,
   ],
 })
 export class AppModule implements NestModule {

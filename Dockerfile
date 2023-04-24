@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn install --production
+# RUN yarn install --production
+# development dependencies도 설치
+RUN yarn install --frozen-lockfile
 
 COPY . .
 
@@ -23,6 +25,9 @@ RUN chmod +x /app/generate-env.sh
 RUN /app/generate-env.sh
 
 RUN yarn build
+
+# 빌드가 완료된 후에 필요없는 development dependencies를 제거
+RUN yarn install --production --frozen-lockfile --ignore-scripts --prefer-offline
 
 EXPOSE 3000
 

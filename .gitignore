@@ -106,3 +106,6 @@ dist
 
 #prisma
 prisma/migrations
+
+#image
+uploads/

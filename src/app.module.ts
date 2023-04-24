@@ -23,6 +23,7 @@ import { AppService } from './app.service';
 import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-proxy.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+// import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -51,6 +52,8 @@ import { join } from 'path';
       ttl: 60,
       limit: 20,
     }),
+
+    // SearchModule,
   ],
   controllers: [AppController],
   providers: [
@@ -67,6 +70,6 @@ import { join } from 'path';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    // consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

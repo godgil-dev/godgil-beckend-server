@@ -24,6 +24,7 @@ COPY generate-env.sh /app/
 RUN chmod +x /app/generate-env.sh
 RUN /app/generate-env.sh
 
+RUN yarn run migrate
 RUN yarn build
 
 # 빌드가 완료된 후에 필요없는 development dependencies를 제거

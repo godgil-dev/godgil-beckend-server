@@ -113,6 +113,15 @@ export class ProConVoteService {
     const proConDiscussions =
       await this.proConDiscussionsHelperService.findOneByPostIdThrow(postId);
 
+    const existProConVote = await this.findExistingVote(
+      userId,
+      proConDiscussions.id,
+    );
+
+    if (!existProConVote) {
+      throw new ConflictException('기존에 찬성반대한적이 없습니다.');
+    }
+
     const proConVote = await this.prisma.proConVote.update({
       where: {
         userId_proConDiscussionId: {

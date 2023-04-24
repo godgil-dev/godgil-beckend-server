@@ -8,14 +8,12 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment, User, CommentLike, CommentDislike } from '@prisma/client';
 import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
-import { PostsService } from 'src/modules/posts/posts.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private proConVoteService: ProConVoteService,
-    private postsService: PostsService,
   ) {}
 
   convertPostToReposnse(
@@ -81,7 +79,7 @@ export class CommentsService {
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
       ...(proConVote && {
-        isAgree: proConVote.isAgree,
+        isPro: proConVote.isPro,
       }),
     };
   }
@@ -174,7 +172,7 @@ export class CommentsService {
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
       ...(proConVote && {
-        isAgree: proConVote.isAgree,
+        isPro: proConVote.isPro,
       }),
     };
   }

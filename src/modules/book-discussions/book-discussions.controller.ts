@@ -64,7 +64,7 @@ export class BookDiscussionsController {
 
     return {
       posts,
-      pagesInfo: {
+      pageInfo: {
         page,
         totalCount,
         currentCount: posts.length,

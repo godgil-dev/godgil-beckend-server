@@ -72,7 +72,7 @@ export class CommentsController {
 
     return {
       comments,
-      pagesInfo: {
+      pageInfo: {
         page,
         totalCount,
         currentCount: comments.length,

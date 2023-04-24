@@ -23,7 +23,7 @@ import { AppService } from './app.service';
 import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-proxy.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-// import { SearchModule } from './modules/search/search.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -53,7 +53,7 @@ import { join } from 'path';
       limit: 20,
     }),
 
-    // SearchModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [

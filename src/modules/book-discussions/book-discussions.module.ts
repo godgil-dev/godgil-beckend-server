@@ -18,5 +18,6 @@ import { AuthModule } from '../auth/auth.module';
     PostLikesModule,
     AuthModule,
   ],
+  exports: [BookDiscussionsService],
 })
 export class BookDiscussionsModule {}

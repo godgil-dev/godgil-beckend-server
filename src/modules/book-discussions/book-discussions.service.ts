@@ -86,13 +86,21 @@ export class BookDiscussionsService {
     return { ...this.convertPostToReposnse(post), comments: [] };
   }
 
-  async findAll(limit: number, offset: number, userId: number) {
-    const posts = await this.prisma.post.findMany({
-      where: {
-        NOT: {
-          BookDiscussion: null,
-        },
+  async findAll(
+    limit: number,
+    offset: number,
+    userId: number,
+    query: string = null,
+  ) {
+    const where = {
+      NOT: {
+        BookDiscussion: null,
       },
+      ...(query !== null && { title: { contains: query } }),
+    };
+
+    const posts = await this.prisma.post.findMany({
+      where,
       take: limit,
       skip: offset,
       include: {

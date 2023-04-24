@@ -110,11 +110,17 @@ export class ProConDiscussionsService {
   }
 
   //ToDo: 대표 두명, 찬반 카운트
-  async findAll(limit: number, offset: number) {
-    const posts = await this.prisma.post.findMany({
-      where: {
-        NOT: { ProConDiscussion: null },
+  async findAll(limit: number, offset: number, query: string = null) {
+    const where = {
+      NOT: {
+        ProConDiscussion: null,
       },
+      ...(query !== null && { title: { contains: query } }),
+    };
+    console.log(where);
+
+    const posts = await this.prisma.post.findMany({
+      where,
       take: limit,
       skip: offset,
       include: {

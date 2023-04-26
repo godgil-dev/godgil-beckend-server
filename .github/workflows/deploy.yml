@@ -44,7 +44,7 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          rsync -avzr --delete --exclude 'node_modules' --exclude '.git' -e 'ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' ./dist/ ubuntu@${{ secrets.AWS_EC2_HOST }}:/var/www/imojumo
+          rsync -avzr --delete --exclude 'node_modules' --exclude '.git' -e 'ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' . ubuntu@${{ secrets.AWS_EC2_HOST }}:/var/www/imojumo
           rm -f private_key.pem
 
       - name: Install dependencies and start the application on EC2 instance

@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && cp ecosystem.config.js dist/",
+    "build": "nest build",
     "build:swc": "npx swc src -d dist",
     "start:swc": "nodemon dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

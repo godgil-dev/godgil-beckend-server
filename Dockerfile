@@ -24,6 +24,7 @@ COPY generate-env.sh /app/
 RUN chmod +x /app/generate-env.sh
 RUN /app/generate-env.sh
 
+RUN npx prisma generate
 RUN yarn prisma migrate deploy
 RUN yarn build
 

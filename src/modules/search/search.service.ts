@@ -18,6 +18,11 @@ export class SearchService {
   ) {
     let proConResults = [];
     let bookResults = [];
+    if (!type) {
+      limit = 3;
+      offset = 0;
+    }
+
     if (!type || type === 'proCon') {
       proConResults = await this.proConDiscussionsService
         .findAll(limit, offset, query)

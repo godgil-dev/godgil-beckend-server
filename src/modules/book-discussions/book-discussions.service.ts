@@ -96,7 +96,11 @@ export class BookDiscussionsService {
       NOT: {
         BookDiscussion: null,
       },
-      ...(query !== null && { title: { contains: query } }),
+      ...(query !== null && {
+        title: {
+          search: `*${query}*`,
+        },
+      }),
     };
 
     const posts = await this.prisma.post.findMany({

@@ -115,7 +115,11 @@ export class ProConDiscussionsService {
       NOT: {
         ProConDiscussion: null,
       },
-      ...(query !== null && { title: { contains: query } }),
+      ...(query !== null && {
+        title: {
+          search: `*${query}*`,
+        },
+      }),
     };
     console.log(where);
 

@@ -1,4 +1,4 @@
-name: CI/CD
+name: Deploy to AWS EC2
 
 on:
   push:
@@ -6,50 +6,52 @@ on:
       - dev
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up environment variables
+      - name: Create .env file
         run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
-          echo "ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}" >> $GITHUB_ENV
-          echo "REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}" >> $GITHUB_ENV
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> $GITHUB_ENV
-          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> $GITHUB_ENV
-          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> $GITHUB_ENV
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+          touch .env
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
+      - name: Set environment variables
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}" >> .env
+          echo "REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}" >> .env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          node-version: 16
 
-      - name: Build and push Docker image
-        run: |
-          docker-compose up --build -d
-          docker-compose push
+      - name: Install dependencies
+        run: yarn install
 
-      - name: Install AWS CLI
-        run: |
-          curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
+      - name: Build
+        run: yarn run build
 
-      - name: Configure AWS CLI
+      - name: Transfer build output to EC2 instance
+        env:
+          PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set default.region ${{ secrets.AWS_REGION }}
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          rsync -avzr --delete --exclude 'node_modules' --exclude '.git' -e 'ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' ./dist/ ubuntu@${{ secrets.AWS_EC2_HOST }}:/var/www/imojumo
+          rm -f private_key.pem
 
-      - name: Copy Docker Compose file to EC2 instance
+      - name: Install dependencies and start the application on EC2 instance
+        env:
+          PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         run: |
-          scp -i ${{ secrets.AWS_SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ubuntu@${{ secrets.AWS_EC2_HOST }}:/home/ubuntu/
-
-      - name: Deploy to EC2 instance
-        run: |
-          ssh -i ${{ secrets.AWS_SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.AWS_EC2_HOST }} 'bash -s' < deploy.sh
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.AWS_EC2_HOST }} 'bash -s' < deploy.sh
+          rm -f private_key.pem

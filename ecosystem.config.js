@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'my-app',
+      name: 'imojumo',
       script: 'dist/src/main.js',
       instances: 'max',
       exec_mode: 'cluster',

@@ -28,6 +28,7 @@ export class BookDiscussionsService {
         username: string;
       };
       PostLike: PostLike[];
+      _count: { PostLike: number };
     },
   ) {
     return {
@@ -36,7 +37,7 @@ export class BookDiscussionsService {
       title: post.title,
       content: post.content,
       views: post.views,
-      thumbup: post.thumbup,
+      likeCount: post._count.PostLike,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
       book: post.BookDiscussion.Book,
@@ -78,6 +79,11 @@ export class BookDiscussionsService {
         PostLike: {
           where: {
             userId: authorId,
+          },
+        },
+        _count: {
+          select: {
+            PostLike: true,
           },
         },
       },
@@ -123,6 +129,11 @@ export class BookDiscussionsService {
             userId,
           },
         },
+        _count: {
+          select: {
+            PostLike: true,
+          },
+        },
       },
     });
     const totalCount = await this.prisma.bookDiscussion.count();
@@ -149,6 +160,11 @@ export class BookDiscussionsService {
         PostLike: {
           where: {
             userId,
+          },
+        },
+        _count: {
+          select: {
+            PostLike: true,
           },
         },
       },
@@ -207,6 +223,11 @@ export class BookDiscussionsService {
         PostLike: {
           where: {
             userId,
+          },
+        },
+        _count: {
+          select: {
+            PostLike: true,
           },
         },
       },

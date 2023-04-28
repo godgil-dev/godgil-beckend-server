@@ -1,4 +1,4 @@
-import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -16,7 +16,6 @@ import { PostLikesModule } from './modules/post-likes/post-likes.module';
 import { AdminModule } from './admin/admin.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
-import { LoggerMiddleware } from './shared/middlewares/logger.middleware';
 import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
 import { ProConDiscussionsHelperService } from './modules/pro-con-discussions-helper/pro-con-discussions-helper.service';
 import { AppService } from './app.service';
@@ -24,6 +23,10 @@ import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-prox
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { SearchModule } from './modules/search/search.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SecurityModule } from './shared/security/security.module';
+import { LoggerModule } from 'nestjs-pino';
+import { pino } from 'pino';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { SearchModule } from './modules/search/search.module';
     ProConDiscussionsModule,
     PostLikesModule,
     AdminModule,
+    SecurityModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
@@ -52,6 +56,21 @@ import { SearchModule } from './modules/search/search.module';
       ttl: 60,
       limit: 20,
     }),
+    ScheduleModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        logger: pino({
+          level: 'info',
+          transport: {
+            target: 'pino-pretty',
+            options: {
+              destination: './logs/app.log',
+            },
+          },
+        }),
+        autoLogging: true,
+      },
+    }),
 
     SearchModule,
   ],
@@ -59,7 +78,7 @@ import { SearchModule } from './modules/search/search.module';
   providers: [
     AppService,
     JwtStrategy,
-    Logger,
+    // Logger,
     ThrottlerBehindProxyGuard,
     {
       provide: APP_GUARD,
@@ -68,8 +87,4 @@ import { SearchModule } from './modules/search/search.module';
     ProConDiscussionsHelperService,
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(LoggerMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

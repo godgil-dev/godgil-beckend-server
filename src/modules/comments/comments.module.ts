@@ -6,9 +6,10 @@ import { CommentsController } from './comments.controller';
 import { CommentsLikeModule } from 'src/modules/comments-like/comments-like.module';
 import { CommentsDislikeModule } from 'src/modules/comments-dislike/comments-dislike.module';
 import { ProConVoteModule } from '../pro-con-vote/pro-con-vote.module';
+import { PaginationService } from '../pagination/pagination.service';
 
 @Module({
-  providers: [CommentsService],
+  providers: [CommentsService, PaginationService],
   exports: [CommentsService],
   imports: [
     PrismaModule,

@@ -3,8 +3,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
-import type { ClientOpts } from 'redis';
-import * as redisStore from 'cache-manager-redis-store';
 
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -15,7 +13,7 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { PostLikesModule } from './modules/post-likes/post-likes.module';
 import { AdminModule } from './admin/admin.module';
 
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+// import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { JwtStrategy } from './modules/auth/strategys/jwt.strategy';
 import { ProConDiscussionsHelperService } from './modules/pro-con-discussions-helper/pro-con-discussions-helper.service';
 import { AppService } from './app.service';
@@ -26,10 +24,23 @@ import { SearchModule } from './modules/search/search.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SecurityModule } from './shared/security/security.module';
 import { LoggerModule } from 'nestjs-pino';
-import { pino } from 'pino';
+import cacheConfig from './config/cache.config';
+import throttlerConfig from './config/throttler.config';
+import pinoConfig from './config/pino.config';
+import { OptionalJwtAuthGuard } from './modules/auth/guards/optional-jwt-auth.guard';
+import { ClientOpts } from 'redis';
+import { ConfigModule } from '@nestjs/config';
+import { RecommendationBooksModule } from './modules/recommendation-books/recommendation-books.module';
+import { PaginationService } from './modules/pagination/pagination.service';
+import * as redisStore from 'cache-manager-redis-store';
+import { MypageModule } from './modules/mypage/mypage.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [cacheConfig, throttlerConfig, throttlerConfig],
+    }),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -38,6 +49,7 @@ import { pino } from 'pino';
     ProConDiscussionsModule,
     PostLikesModule,
     AdminModule,
+
     SecurityModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
@@ -51,28 +63,16 @@ import { pino } from 'pino';
       password: process.env.REDIS_PASSWORD,
       isGlobal: true,
     }),
-
-    ThrottlerModule.forRoot({
-      ttl: 60,
-      limit: 20,
+    ThrottlerModule.forRootAsync({
+      useFactory: throttlerConfig,
     }),
     ScheduleModule.forRoot(),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        logger: pino({
-          level: 'info',
-          transport: {
-            target: 'pino-pretty',
-            options: {
-              destination: './logs/app.log',
-            },
-          },
-        }),
-        autoLogging: true,
-      },
+    LoggerModule.forRootAsync({
+      useFactory: pinoConfig,
     }),
-
     SearchModule,
+    RecommendationBooksModule,
+    MypageModule,
   ],
   controllers: [AppController],
   providers: [
@@ -82,9 +82,10 @@ import { pino } from 'pino';
     ThrottlerBehindProxyGuard,
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: OptionalJwtAuthGuard,
     },
     ProConDiscussionsHelperService,
+    PaginationService,
   ],
 })
 export class AppModule {}

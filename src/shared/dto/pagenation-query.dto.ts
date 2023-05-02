@@ -4,6 +4,7 @@ import { IsNumber, IsOptional, Min, Max } from 'class-validator';
 export class PaginationQueryDto {
   @IsOptional()
   @Type(() => Number)
+  @Transform(({ value }) => parseInt(value, 10))
   @IsNumber()
   @Min(1)
   page = 1;

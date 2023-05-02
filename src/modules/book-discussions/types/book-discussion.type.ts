@@ -20,20 +20,10 @@ export interface ResponseType {
   };
 }
 
-// Post & {
-//     User: {
-//         username: string;
-//     };
-//     BookDiscussion: (BookDiscussion & {
-//         Book: Book;
-//     })[];
-//     Comment: (Comment & {
-//         User: {
-//             username: string;
-//         };
-//         _count: {
-//             CommentLike: number;
-//             CommentDislike: number;
-//         };
-//     })[];
-// }
+export interface FindAllType {
+  limit: number;
+  offset: number;
+  userId: number;
+  query?: string;
+  myPostsOnly?: boolean;
+}

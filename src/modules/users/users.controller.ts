@@ -30,6 +30,48 @@ import UserRequest from '../auth/types/user-request.interface';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Patch('/avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    required: true,
+    type: 'multipart/form-data',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async uploadAvatar(
+    @Req() request: UserRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const avatarUrl = `uploads/${file.filename}`;
+    const user = await this.usersService.uploadAvatar(
+      request.user.id,
+      file.filename,
+    );
+    const host = request.protocol + '://' + request.get('host');
+
+    return {
+      avatarUrl: `${host}/${avatarUrl}`,
+    };
+  }
+
+  @Delete('/avatar')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: UserEntity })
+  async removeAvatar(@Req() request: UserRequest) {
+    const user = await this.usersService.removeAvatar(request.user.id);
+    console.log(user);
+    return new UserEntity(user);
+  }
+
   @Post()
   @Public()
   @ApiCreatedResponse({ type: UserEntity })
@@ -70,35 +112,5 @@ export class UsersController {
   @ApiCreatedResponse({ type: UserEntity })
   async remove(@Req() request: UserRequest) {
     return new UserEntity(await this.usersService.remove(request.user.id));
-  }
-
-  @Patch('/avatar')
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    required: true,
-    type: 'multipart/form-data',
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @ApiBearerAuth()
-  @UseInterceptors(FileInterceptor('file', multerConfig))
-  async uploadFile(
-    @Req() request: UserRequest,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    const avatarUrl = `uploads/${file.filename}`;
-    const user = await this.usersService.update(request.user.id, { avatarUrl });
-    const host = request.protocol + '://' + request.get('host');
-
-    return {
-      avatarUrl: `${host}/${user.avatarUrl}`,
-    };
   }
 }

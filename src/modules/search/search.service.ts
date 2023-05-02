@@ -25,12 +25,12 @@ export class SearchService {
 
     if (!type || type === 'proCon') {
       proConResults = await this.proConDiscussionsService
-        .findAll(limit, offset, query)
+        .findAll({ limit, offset, query })
         .then(({ posts }) => posts);
     }
     if (!type || type === 'book') {
       bookResults = await this.bookDiscussionsService
-        .findAll(limit, offset, userId, query)
+        .findAll({ limit, offset, userId, query })
         .then(({ posts }) => posts);
     }
 

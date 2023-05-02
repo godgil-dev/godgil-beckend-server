@@ -51,16 +51,14 @@ export class BookDiscussionsController {
     @Query() paginationQueryDto: PaginationQueryDto,
     @Req() request: UserRequest,
   ) {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    const user = await this.authService.getUserFromToken(token);
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
 
-    const { posts, totalCount } = await this.bookDiscussionsService.findAll(
+    const { posts, totalCount } = await this.bookDiscussionsService.findAll({
       limit,
       offset,
-      user?.id || -1,
-    );
+      userId: request.user?.id || -1,
+    });
 
     return {
       posts,

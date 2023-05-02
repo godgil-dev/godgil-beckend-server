@@ -5,13 +5,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Post, ProConDiscussion, ProConVote } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CommentsService } from '../comments/comments.service';
 import { PostsService } from '../posts/posts.service';
 import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
 import { CreateProConDiscussionDto } from './dto/create-pro-con-discussion.dto';
 import { UpdateProConDiscussionDto } from './dto/update-pro-con-discussion.dto';
+import { FindAllType } from './types/pro-con-discussion.type';
+import { prismaPostInclude } from './utils/pro-con-discussion.util';
+import { Post, ProConDiscussion, ProConVote } from '@prisma/client';
 
 @Injectable()
 export class ProConDiscussionsService {
@@ -22,10 +24,10 @@ export class ProConDiscussionsService {
     @Inject(forwardRef(() => CommentsService))
     private commentsService: CommentsService,
   ) {
-    this.convertPostToReposnse = this.convertPostToReposnse.bind(this);
+    this.convertPostToResponse = this.convertPostToResponse.bind(this);
   }
 
-  async convertPostToReposnse(
+  async convertPostToResponse(
     post: Post & {
       ProConDiscussion: ProConDiscussion & {
         ProConVote: ProConVote[];
@@ -55,13 +57,13 @@ export class ProConDiscussionsService {
       updatedAt: post.updatedAt.toISOString(),
       proCount,
       conCount,
-      proSideUser: firstPro?.User
+      proLeader: firstPro?.User
         ? {
             username: firstPro.User.username,
             avatarUrl: firstPro.User.avatarUrl,
           }
         : null,
-      conSideUser: firstCon?.User
+      conLeader: firstCon?.User
         ? {
             username: firstCon.User.username,
             avatarUrl: firstCon.User.avatarUrl,
@@ -90,27 +92,22 @@ export class ProConDiscussionsService {
           },
         },
       },
-      include: {
-        ProConDiscussion: {
-          include: {
-            ProConVote: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-      },
+      include: prismaPostInclude(),
     });
 
-    const response = await this.convertPostToReposnse(post);
+    const response = await this.convertPostToResponse(post);
 
     return { ...response, comments: [] };
   }
 
   //ToDo: 대표 두명, 찬반 카운트
-  async findAll(limit: number, offset: number, query: string = null) {
+  async findAll({
+    limit,
+    offset,
+    userId,
+    query = null,
+    myPostsOnly = false,
+  }: FindAllType) {
     const where = {
       NOT: {
         ProConDiscussion: null,
@@ -120,8 +117,10 @@ export class ProConDiscussionsService {
           search: `*${query}*`,
         },
       }),
+      ...(myPostsOnly && {
+        authorId: userId,
+      }),
     };
-    console.log(where);
 
     const posts = await this.prisma.post.findMany({
       where,
@@ -142,10 +141,10 @@ export class ProConDiscussionsService {
     });
 
     const totalCount = await this.prisma.proConDiscussion.count();
-    const convertPostToReposnse = posts.map(this.convertPostToReposnse);
+    const response = posts.map(this.convertPostToResponse);
 
     return {
-      posts: await Promise.all(convertPostToReposnse),
+      posts: await Promise.all(response),
       totalCount,
     };
   }
@@ -155,25 +154,14 @@ export class ProConDiscussionsService {
       where: {
         id,
       },
-      include: {
-        ProConDiscussion: {
-          include: {
-            ProConVote: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-      },
+      include: prismaPostInclude(),
     });
 
     if (!post.ProConDiscussion) {
       throw new BadRequestException('찬성반대 토론 형태의 게시물이 아닙니다');
     }
 
-    const response = await this.convertPostToReposnse(post);
+    const response = await this.convertPostToResponse(post);
     const comments = await this.commentsService.findAllByPostId(id, userId);
 
     return { ...response, comments };
@@ -220,21 +208,10 @@ export class ProConDiscussionsService {
           content: content,
         }),
       },
-      include: {
-        ProConDiscussion: {
-          include: {
-            ProConVote: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-      },
+      include: prismaPostInclude(),
     });
 
-    const response = await this.convertPostToReposnse(post);
+    const response = await this.convertPostToResponse(post);
     const comments = await this.commentsService.findAllByPostId(id, authorId);
     return { ...response, comments };
   }

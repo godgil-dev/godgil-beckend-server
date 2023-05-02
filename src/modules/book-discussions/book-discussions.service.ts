@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Post, BookDiscussion, Book, Comment, PostLike } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PostsService } from 'src/modules/posts/posts.service';
@@ -8,6 +7,8 @@ import { CommentsService } from '../comments/comments.service';
 
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
+import { postToResponse, prismaPostInclude } from './utils/postUtils';
+import { FindAllType } from './types/book-discussion.type';
 
 @Injectable()
 export class BookDiscussionsService {
@@ -17,34 +18,6 @@ export class BookDiscussionsService {
     private bookService: BooksService,
     private commentsService: CommentsService,
   ) {}
-
-  convertPostToReposnse(
-    post: Post & {
-      BookDiscussion: BookDiscussion & {
-        Book: Book;
-      };
-      Comment?: Comment[];
-      User: {
-        username: string;
-      };
-      PostLike: PostLike[];
-      _count: { PostLike: number };
-    },
-  ) {
-    return {
-      id: post.id,
-      author: post.User.username,
-      title: post.title,
-      content: post.content,
-      views: post.views,
-      likeCount: post._count.PostLike,
-      createdAt: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
-      book: post.BookDiscussion.Book,
-      ...(post.Comment && { comments: post.Comment }),
-      postLikedByUser: post.PostLike.length > 0 ? true : false,
-    };
-  }
 
   async create(
     createBookDiscussionDto: CreateBookDiscussionDto,
@@ -65,39 +38,19 @@ export class BookDiscussionsService {
           },
         },
       },
-      include: {
-        BookDiscussion: {
-          include: {
-            Book: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-        PostLike: {
-          where: {
-            userId: authorId,
-          },
-        },
-        _count: {
-          select: {
-            PostLike: true,
-          },
-        },
-      },
+      include: prismaPostInclude(authorId),
     });
 
-    return { ...this.convertPostToReposnse(post), comments: [] };
+    return { ...postToResponse(post), comments: [] };
   }
 
-  async findAll(
-    limit: number,
-    offset: number,
-    userId: number,
-    query: string = null,
-  ) {
+  async findAll({
+    limit,
+    offset,
+    userId,
+    query = null,
+    myPostsOnly = false,
+  }: FindAllType) {
     const where = {
       NOT: {
         BookDiscussion: null,
@@ -107,38 +60,20 @@ export class BookDiscussionsService {
           search: `*${query}*`,
         },
       }),
+      ...(myPostsOnly && {
+        authorId: userId,
+      }),
     };
 
     const posts = await this.prisma.post.findMany({
       where,
       take: limit,
       skip: offset,
-      include: {
-        BookDiscussion: {
-          include: {
-            Book: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-        PostLike: {
-          where: {
-            userId,
-          },
-        },
-        _count: {
-          select: {
-            PostLike: true,
-          },
-        },
-      },
+      include: prismaPostInclude(userId),
     });
     const totalCount = await this.prisma.bookDiscussion.count();
 
-    return { posts: posts.map(this.convertPostToReposnse), totalCount };
+    return { posts: posts.map(postToResponse), totalCount };
   }
 
   async findOne(id: number, userId: number) {
@@ -146,28 +81,7 @@ export class BookDiscussionsService {
       where: {
         id,
       },
-      include: {
-        BookDiscussion: {
-          include: {
-            Book: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-        PostLike: {
-          where: {
-            userId,
-          },
-        },
-        _count: {
-          select: {
-            PostLike: true,
-          },
-        },
-      },
+      include: prismaPostInclude(userId),
     });
 
     if (!post.BookDiscussion) {
@@ -176,7 +90,7 @@ export class BookDiscussionsService {
 
     const comments = await this.commentsService.findAllByPostId(id, userId);
 
-    return { ...this.convertPostToReposnse(post), comments };
+    return { ...postToResponse(post), comments };
   }
 
   async update(
@@ -209,33 +123,12 @@ export class BookDiscussionsService {
           },
         }),
       },
-      include: {
-        BookDiscussion: {
-          include: {
-            Book: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-        PostLike: {
-          where: {
-            userId,
-          },
-        },
-        _count: {
-          select: {
-            PostLike: true,
-          },
-        },
-      },
+      include: prismaPostInclude(userId),
     });
 
     const comments = await this.commentsService.findAllByPostId(id, userId);
 
-    return { ...this.convertPostToReposnse(post), comments };
+    return { ...postToResponse(post), comments };
   }
 
   async remove(id: number) {

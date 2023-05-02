@@ -6,44 +6,20 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Comment, User, CommentLike, CommentDislike } from '@prisma/client';
 import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
+import { convertCommentToReposnse } from './utils/comments.util';
+import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
+import { CommentResponseDto, PageInfoDto } from './dto/comment-response.dto';
+import { User } from '@prisma/client';
+import { PaginationService } from '../pagination/pagination.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private proConVoteService: ProConVoteService,
+    private paginationService: PaginationService,
   ) {}
-
-  convertPostToReposnse(
-    comment: Comment & {
-      User: {
-        username: string;
-      };
-      _count: {
-        CommentLike: number;
-        CommentDislike: number;
-      };
-      CommentLike: CommentLike[];
-      CommentDislike: CommentDislike[];
-    },
-    userId: number,
-  ) {
-    return {
-      id: comment.id,
-      author: comment.User.username,
-      content: comment.content,
-      like: comment._count.CommentDislike,
-      dislike: comment._count.CommentLike,
-      createdAt: comment.createdAt.toISOString(),
-      updatedAt: comment.updatedAt.toISOString(),
-      likedByUser: comment.CommentLike.some((like) => like.userId === userId),
-      dislikedBytUser: comment.CommentDislike.some(
-        (dislike) => dislike.userId === userId,
-      ),
-    };
-  }
 
   async create(
     { content }: CreateCommentDto,
@@ -108,9 +84,7 @@ export class CommentsService {
       },
     });
 
-    return comments.map((comment) =>
-      this.convertPostToReposnse(comment, userId),
-    );
+    return comments.map((comment) => convertCommentToReposnse(comment, userId));
   }
 
   async findAllByPostIdPages(postId: number, limit: number, offset: number) {
@@ -129,7 +103,42 @@ export class CommentsService {
 
     const totalCount = await this.countByPostId(postId);
 
-    return { comments: comments.map(this.convertPostToReposnse), totalCount };
+    return { comments: comments.map(convertCommentToReposnse), totalCount };
+  }
+
+  async findAllByUserId(userId: number, page: number, limit: number) {
+    const offset = this.paginationService.getOffset(page, limit);
+
+    const [comments, totalCount] = await Promise.all([
+      this.prisma.comment.findMany({
+        where: { authorId: userId },
+        take: limit,
+        skip: offset,
+      }),
+      this.countByUserId(userId),
+    ]);
+
+    return {
+      comments: comments.map((comment) => {
+        return {
+          id: comment.id,
+          postId: comment.postId,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+        };
+      }),
+      pageInfo: this.paginationService.createPageInfo(
+        totalCount,
+        page,
+        limit,
+        comments.length,
+      ),
+    };
+  }
+
+  async countByUserId(userId: number) {
+    return await this.prisma.comment.count({ where: { authorId: userId } });
   }
 
   async update(updateCommentDto: UpdateCommentDto, id: number, userId: number) {

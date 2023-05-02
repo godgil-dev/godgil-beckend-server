@@ -81,6 +81,26 @@ export class CommentsController {
     };
   }
 
+  @ApiQuery({ name: 'limit', type: Number, required: true })
+  @ApiQuery({ name: 'page', type: Number, required: true })
+  @ApiBearerAuth()
+  @Get('user')
+  async findAllByUserId(
+    @Query() { page, limit }: PaginationQueryDto,
+    @Req() request: UserRequest,
+  ) {
+    const { comments, pageInfo } = await this.commentsService.findAllByUserId(
+      request.user.id,
+      page,
+      limit,
+    );
+
+    return {
+      comments,
+      pageInfo,
+    };
+  }
+
   @Get(':id')
   @Public()
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -119,7 +139,7 @@ export class CommentsController {
   ) {
     return await this.commentsLikeService.create({
       commentId: id,
-      userId: Number(request.user.id),
+      userId: request.user.id,
     });
   }
 
@@ -131,7 +151,7 @@ export class CommentsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() request: UserRequest,
   ) {
-    await this.commentsLikeService.removeThrow(id, Number(request.user.id));
+    await this.commentsLikeService.removeThrow(id, request.user.id);
   }
 
   @ApiBearerAuth()
@@ -143,7 +163,7 @@ export class CommentsController {
   ) {
     return await this.commentsDislikeService.create({
       commentId: id,
-      userId: Number(request.user.id),
+      userId: request.user.id,
     });
   }
 
@@ -155,6 +175,6 @@ export class CommentsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() request: UserRequest,
   ) {
-    await this.commentsDislikeService.removeThrow(id, Number(request.user.id));
+    await this.commentsDislikeService.removeThrow(id, request.user.id);
   }
 }

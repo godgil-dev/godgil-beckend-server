@@ -48,13 +48,17 @@ export class ProConDiscussionsController {
   @ApiQuery({ name: 'page', type: Number, required: true })
   @Public()
   @Get()
-  async findAll(@Query() paginationQueryDto: PaginationQueryDto) {
+  async findAll(
+    @Query() paginationQueryDto: PaginationQueryDto,
+    @Req() request: UserRequest,
+  ) {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
-    const { posts, totalCount } = await this.proConDiscussionsService.findAll(
+    const { posts, totalCount } = await this.proConDiscussionsService.findAll({
       limit,
       offset,
-    );
+      userId: request?.user?.id,
+    });
     return {
       posts,
       pageInfo: {

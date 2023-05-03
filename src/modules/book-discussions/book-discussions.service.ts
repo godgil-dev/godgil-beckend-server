@@ -67,6 +67,9 @@ export class BookDiscussionsService {
 
     const posts = await this.prisma.post.findMany({
       where,
+      orderBy: {
+        createdAt: 'desc',
+      },
       take: limit,
       skip: offset,
       include: prismaPostInclude(userId),

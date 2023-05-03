@@ -8,8 +8,6 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
 import { convertCommentToReposnse } from './utils/comments.util';
-import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
-import { CommentResponseDto, PageInfoDto } from './dto/comment-response.dto';
 import { User } from '@prisma/client';
 import { PaginationService } from '../pagination/pagination.service';
 
@@ -67,6 +65,9 @@ export class CommentsService {
   async findAllByPostId(postId: number, userId: number) {
     const comments = await this.prisma.comment.findMany({
       where: { postId },
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         User: {
           select: {
@@ -92,6 +93,9 @@ export class CommentsService {
       where: { postId },
       take: limit,
       skip: offset,
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         User: {
           select: {
@@ -112,6 +116,9 @@ export class CommentsService {
     const [comments, totalCount] = await Promise.all([
       this.prisma.comment.findMany({
         where: { authorId: userId },
+        orderBy: {
+          createdAt: 'desc',
+        },
         take: limit,
         skip: offset,
       }),

@@ -16,7 +16,7 @@ export class PostLikesService {
       throw new ConflictException('이미 좋아요한 게시글입니다.');
     }
 
-    return await this.prisma.postLike.create({
+    await this.prisma.postLike.create({
       data: {
         userId,
         postId,
@@ -29,6 +29,8 @@ export class PostLikesService {
         },
       },
     });
+
+    return this.countByPostId(postId);
   }
 
   async findOne(postId: number, userId: number) {
@@ -49,7 +51,7 @@ export class PostLikesService {
       throw new NotFoundException('게시글 좋아요를 찾을 수 없습니다.');
     }
 
-    return await this.prisma.postLike.delete({
+    await this.prisma.postLike.delete({
       where: {
         userId_postId: {
           userId,
@@ -57,6 +59,8 @@ export class PostLikesService {
         },
       },
     });
+
+    return this.countByPostId(postId);
   }
 
   async countByPostId(postId: number) {

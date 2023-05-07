@@ -8,7 +8,7 @@ import { CommentsService } from '../comments/comments.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 import { postToResponse, prismaPostInclude } from './utils/postUtils';
-import { FindAllType } from './types/book-discussion.type';
+import { FindAllByIsbnType, FindAllType } from './types/book-discussion.type';
 
 @Injectable()
 export class BookDiscussionsService {
@@ -50,33 +50,82 @@ export class BookDiscussionsService {
     userId,
     query = null,
     myPostsOnly = false,
+    sortBy = 'lastest',
   }: FindAllType) {
+    const queryString = query !== null && {
+      title: {
+        search: `*${query}*`,
+      },
+    };
+
     const where = {
       NOT: {
         BookDiscussion: null,
       },
-      ...(query !== null && {
-        title: {
-          search: `*${query}*`,
-        },
-      }),
+      ...queryString,
       ...(myPostsOnly && {
         authorId: userId,
       }),
     };
 
+    const orderByLatest = {
+      createdAt: 'desc',
+    };
+
+    const orderByPopular = {
+      PostLike: {
+        _count: 'desc',
+      },
+    };
+
+    const orderBy =
+      { lastest: orderByLatest, popular: orderByPopular }[sortBy] || {};
+
     const posts = await this.prisma.post.findMany({
       where,
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy,
       take: limit,
       skip: offset,
       include: prismaPostInclude(userId),
     });
-    const totalCount = await this.prisma.bookDiscussion.count();
 
+    const totalCount = await this.prisma.post.count({
+      where,
+    });
+
+    console.log(posts);
     return { posts: posts.map(postToResponse), totalCount };
+  }
+
+  async findAllDiscussionsByIsbn({
+    userId,
+    isbn,
+    limit,
+    offset,
+  }: FindAllByIsbnType) {
+    const book = await this.bookService.findOneByIsbn(isbn);
+
+    if (!book) {
+      return { posts: [], totalCount: 0 };
+    }
+
+    const bookDiscussion = await this.prisma.bookDiscussion.findFirst({
+      where: { bookId: book.id },
+    });
+
+    if (!bookDiscussion) {
+      return { posts: [], totalCount: 0 };
+    }
+
+    const posts = await this.prisma.post.findMany({
+      where: { id: bookDiscussion.postId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+      include: prismaPostInclude(userId),
+    });
+
+    return { posts: posts.map(postToResponse), totalCount: posts.length };
   }
 
   async findOne(id: number, userId: number) {

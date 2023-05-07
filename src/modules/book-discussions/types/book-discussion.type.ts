@@ -26,4 +26,12 @@ export interface FindAllType {
   userId: number;
   query?: string;
   myPostsOnly?: boolean;
+  sortBy?: 'lastest' | 'popular';
+}
+
+export interface FindAllByIsbnType {
+  userId: number;
+  isbn: string;
+  limit: number;
+  offset: number;
 }

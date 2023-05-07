@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -13,6 +13,29 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
+    const usernamePrefix = createUserDto.email.split('@')[0];
+    const existingEmail = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+    let suffix = 1;
+    let newUsername = usernamePrefix;
+
+    if (existingEmail) {
+      throw new ConflictException('이미 존재하는 이메일 주소입니다');
+    }
+
+    let count = await this.prisma.user.count({
+      where: { username: newUsername },
+    });
+
+    while (count > 0) {
+      newUsername = `${usernamePrefix}_${suffix.toString().padStart(2, '0')}`;
+      count = await this.prisma.user.count({
+        where: { username: newUsername },
+      });
+      suffix++;
+    }
+
     const hashedPassword = await bcrypt.hash(
       createUserDto.password,
       roundsOfHashing,
@@ -20,9 +43,22 @@ export class UsersService {
 
     createUserDto.password = hashedPassword;
 
-    return this.prisma.user.create({
-      data: createUserDto,
+    const user = await this.prisma.user.create({
+      data: { ...createUserDto, username: newUsername },
+      include: { role: true },
     });
+
+    // role.id 대신 role.name을 사용하여 반환
+    const role = user.role.name ?? '';
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 
   findAll() {

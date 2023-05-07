@@ -58,4 +58,12 @@ export class PostLikesService {
       },
     });
   }
+
+  async countByPostId(postId: number) {
+    return await this.prisma.postLike.count({
+      where: {
+        postId,
+      },
+    });
+  }
 }

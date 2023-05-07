@@ -3,40 +3,39 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
+  Req,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
-import { UpdateBookDto } from './dto/update-book.dto';
+import { Public } from '../auth/decorators/public.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import UserRequest from '../auth/types/user-request.interface';
 
+@ApiTags('books')
 @Controller('books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
+  @ApiBearerAuth()
   @Post()
   create(@Body() createBookDto: CreateBookDto) {
     return this.booksService.create(createBookDto);
   }
 
-  @Get()
-  findAll() {
-    return this.booksService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.booksService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBookDto: UpdateBookDto) {
-    return this.booksService.update(+id, updateBookDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.booksService.remove(+id);
+  @ApiBearerAuth()
+  @Public()
+  @Get(':isbn')
+  async findOne(
+    @Param('isbn', ParseIntPipe) isbn: number,
+    @Req() request: UserRequest,
+  ) {
+    return await this.booksService.findBookDiscussionsByIsbn(
+      isbn,
+      0,
+      3,
+      request.user?.id || -1,
+    );
   }
 }

@@ -30,7 +30,7 @@ export class PostLikesService {
       },
     });
 
-    return this.countByPostId(postId);
+    return { likeCount: await this.countByPostId(postId) };
   }
 
   async findOne(postId: number, userId: number) {
@@ -60,7 +60,7 @@ export class PostLikesService {
       },
     });
 
-    return this.countByPostId(postId);
+    return { likeCount: await this.countByPostId(postId) };
   }
 
   async countByPostId(postId: number) {

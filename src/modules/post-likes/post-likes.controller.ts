@@ -5,19 +5,21 @@ import {
   Delete,
   ParseIntPipe,
   Req,
-  HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { PostLikesService } from './post-likes.service';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import UserRequest from '../auth/types/user-request.interface';
+import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 
 @ApiTags('likes')
 @Controller('likes/:postId')
 export class PostLikesController {
   constructor(private readonly postLikesService: PostLikesService) {}
 
-  @Post()
   @ApiBearerAuth()
+  @Post()
+  @UseGuards(ParamPostExistGuard)
   async create(
     @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
@@ -25,13 +27,13 @@ export class PostLikesController {
     return await this.postLikesService.create(postId, request.user.id);
   }
 
-  @Delete()
   @ApiBearerAuth()
-  @HttpCode(204)
+  @Delete()
+  @UseGuards(ParamPostExistGuard)
   async remove(
     @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
   ) {
-    await this.postLikesService.remove(postId, request.user.id);
+    return await this.postLikesService.remove(postId, request.user.id);
   }
 }

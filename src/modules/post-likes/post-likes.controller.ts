@@ -5,7 +5,6 @@ import {
   Delete,
   ParseIntPipe,
   Req,
-  HttpCode,
 } from '@nestjs/common';
 import { PostLikesService } from './post-likes.service';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -27,11 +26,10 @@ export class PostLikesController {
 
   @Delete()
   @ApiBearerAuth()
-  @HttpCode(204)
   async remove(
     @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
   ) {
-    await this.postLikesService.remove(postId, request.user.id);
+    return await this.postLikesService.remove(postId, request.user.id);
   }
 }

@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { postToResponseWithoutBook } from './utils/response.utils';
 
 @Injectable()
 export class BooksService {
@@ -27,6 +28,46 @@ export class BooksService {
     return await this.prisma.book.findUnique({
       where: { isbn },
     });
+  }
+
+  async findBookDiscussionsByIsbn(
+    isbn: number,
+    offset: number,
+    limit: number,
+    userId: number,
+  ) {
+    const book = await this.findOneByIsbn(isbn);
+
+    if (!book) {
+      throw new NotFoundException(`[${isbn}] book not found`);
+    }
+
+    const bookDiscussions = await this.prisma.bookDiscussion.findMany({
+      where: { bookId: book.id },
+      include: {
+        Post: {
+          include: {
+            PostLike: true,
+            BookDiscussion: {
+              include: {
+                Book: true,
+              },
+            },
+          },
+        },
+      },
+      skip: offset,
+      orderBy: { Post: { createdAt: 'desc' } },
+      take: limit,
+    });
+
+    const posts = bookDiscussions.map((bookDiscussion) => {
+      const post = bookDiscussion.Post;
+      const isLiked = post.PostLike.some((like) => like.userId === userId);
+      return postToResponseWithoutBook(post, isLiked);
+    });
+
+    return { posts, book };
   }
 
   async findAndCreateByIsbn(createBookDto: CreateBookDto) {

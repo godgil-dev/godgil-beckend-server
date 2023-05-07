@@ -8,6 +8,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
+  HttpCode,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -76,7 +77,7 @@ export class UsersController {
   @Public()
   @ApiCreatedResponse({ type: UserEntity })
   async create(@Body() createUserDto: CreateUserDto) {
-    return new UserEntity(await this.usersService.create(createUserDto));
+    return await this.usersService.create(createUserDto);
   }
 
   @Get()
@@ -85,14 +86,14 @@ export class UsersController {
   async findAll() {
     const users = await this.usersService.findAll();
 
-    return users.map((user) => new UserEntity(user));
+    return users.map((user) => user);
   }
 
   @Get()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
   async findOne(@Req() request: UserRequest) {
-    return new UserEntity(await this.usersService.findOneById(request.user.id));
+    return await this.usersService.findOneById(request.user.id);
   }
 
   @Patch()
@@ -102,15 +103,14 @@ export class UsersController {
     @Req() request: UserRequest,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return new UserEntity(
-      await this.usersService.update(request.user.id, updateUserDto),
-    );
+    return await this.usersService.update(request.user.id, updateUserDto);
   }
 
+  @HttpCode(204)
   @Delete()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
   async remove(@Req() request: UserRequest) {
-    return new UserEntity(await this.usersService.remove(request.user.id));
+    await this.usersService.remove(request.user.id);
   }
 }

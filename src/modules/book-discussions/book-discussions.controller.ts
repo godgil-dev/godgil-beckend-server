@@ -21,6 +21,7 @@ import { BookDiscussionsService } from './book-discussions.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 import { AuthService } from '../auth/auth.service';
+import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 
 @ApiTags('book-discussions')
 @Controller('book-discussions')
@@ -45,11 +46,13 @@ export class BookDiscussionsController {
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', type: Number, required: true })
   @ApiQuery({ name: 'page', type: Number, required: true })
+  @ApiQuery({ name: 'sortBy', type: String, required: false })
   @Public()
   @Get()
   async findAll(
     @Query() paginationQueryDto: PaginationQueryDto,
     @Req() request: UserRequest,
+    @Query() sortBy: 'lastest' | 'popular' = 'lastest',
   ) {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
@@ -58,6 +61,7 @@ export class BookDiscussionsController {
       limit,
       offset,
       userId: request.user?.id || -1,
+      sortBy,
     });
 
     return {
@@ -72,16 +76,14 @@ export class BookDiscussionsController {
   }
 
   @Public()
-  @Get(':id')
+  @Get(':postId')
+  @UseGuards(ParamPostExistGuard)
   @ApiBearerAuth()
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('postId', ParseIntPipe) postId: number,
     @Req() request: UserRequest,
   ) {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    const user = await this.authService.getUserFromToken(token);
-
-    return this.bookDiscussionsService.findOne(id, user?.id || -1);
+    return this.bookDiscussionsService.findOne(postId, request.user?.id || -1);
   }
 
   @ApiBearerAuth()

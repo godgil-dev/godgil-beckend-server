@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
+import { convertUserToResponse } from './utils/response.uitls';
 
 export const roundsOfHashing = 10;
 
@@ -48,17 +49,7 @@ export class UsersService {
       include: { role: true },
     });
 
-    // role.id 대신 role.name을 사용하여 반환
-    const role = user.role.name ?? '';
-
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return convertUserToResponse(user);
   }
 
   findAll() {
@@ -77,7 +68,10 @@ export class UsersService {
   }
 
   findOneById(id: number) {
-    return this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { role: true },
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -91,6 +85,7 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: updateUserDto,
+      include: { role: true },
     });
   }
 
@@ -115,13 +110,14 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { avatarUrl },
+      include: { role: true },
     });
-    return user;
+
+    return convertUserToResponse(user);
   }
 
   async removeAvatar(userId: number) {
-    const user = await this.findOneById(userId);
-    console.log(user);
+    let user = await this.findOneById(userId);
 
     if (user.avatarUrl) {
       const filePath = path.join(
@@ -133,12 +129,13 @@ export class UsersService {
       );
 
       fs.unlinkSync(filePath);
-      return await this.prisma.user.update({
+      user = await this.prisma.user.update({
         where: { id: userId },
         data: { avatarUrl: null },
+        include: { role: true },
       });
     }
 
-    return user;
+    return convertUserToResponse(user);
   }
 }

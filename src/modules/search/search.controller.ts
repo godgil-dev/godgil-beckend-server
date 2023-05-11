@@ -5,6 +5,7 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import UserRequest from '../auth/types/user-request.interface';
 import { AuthService } from '../auth/auth.service';
 import { Public } from '../auth/decorators/public.decorator';
+import { SearchAllDto } from './dto/search-all.dto';
 
 @ApiTags('sarch')
 @Controller('search')
@@ -17,29 +18,25 @@ export class SearchController {
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', type: Number, required: false })
   @ApiQuery({ name: 'page', type: Number, required: false })
-  @ApiQuery({ name: 'type', type: String, required: false })
+  @ApiQuery({ name: 'type', type: String, required: true })
+  @ApiQuery({ name: 'isbn', type: Number, required: false })
   @Public()
   @Get()
   async searchAll(
-    @Query('query') query: string,
-    @Query('type') type: string,
+    @Query() searchAllDto: SearchAllDto,
     @Req() request: UserRequest,
-    @Query() paginationQueryDto?: PaginationQueryDto,
   ) {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    const user = await this.authService.getUserFromToken(token);
+    const { page, limit, query, type, isbn } = searchAllDto;
 
-    console.log(paginationQueryDto, paginationQueryDto.page);
-
-    const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
     const { proConResults, bookResults, totalCount } =
       await this.searchService.searchAll(
         limit,
         offset,
-        user?.id || -1,
+        request.user?.id || -1,
         query,
         type,
+        isbn,
       );
 
     return {

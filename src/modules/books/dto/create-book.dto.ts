@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBookDto {
   @IsNotEmpty()
-  @IsNumber()
+  @IsString()
   @ApiProperty()
-  isbn: number;
+  isbn: string;
 
   @IsNotEmpty()
   @IsString()
@@ -30,12 +30,12 @@ export class CreateBookDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
-  url: string;
+  link: string;
 
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
-  image: string;
+  cover: string;
 
   @IsNotEmpty()
   @IsString()

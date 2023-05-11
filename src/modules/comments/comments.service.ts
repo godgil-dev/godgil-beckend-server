@@ -183,8 +183,8 @@ export class CommentsService {
     return {
       author: comment.User.username,
       content: comment.content,
-      like: comment._count.CommentDislike,
-      dislike: comment._count.CommentLike,
+      like: comment._count.CommentLike,
+      dislike: comment._count.CommentDislike,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
       ...(proConVote && {

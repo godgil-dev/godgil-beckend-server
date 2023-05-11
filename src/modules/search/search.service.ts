@@ -15,26 +15,60 @@ export class SearchService {
     userId: number,
     query: string,
     type: string,
+    isbn?: string,
   ) {
     let proConResults = [];
     let bookResults = [];
-    if (!type) {
+
+    if (type === 'all') {
       limit = 3;
       offset = 0;
-    }
 
-    if (!type || type === 'proCon') {
       proConResults = await this.proConDiscussionsService
         .findAll({ limit, offset, query })
         .then(({ posts }) => posts);
-    }
-    if (!type || type === 'book') {
+
       bookResults = await this.bookDiscussionsService
         .findAll({ limit, offset, userId, query })
         .then(({ posts }) => posts);
+
+      const totalCount = proConResults.length + bookResults.length;
+      return { proConResults, bookResults, totalCount };
     }
 
-    const totalCount = proConResults.length + bookResults.length;
-    return { proConResults, bookResults, totalCount };
+    if (type === 'proCon') {
+      const { posts, totalCount } = await this.proConDiscussionsService.findAll(
+        {
+          limit,
+          offset,
+          query,
+        },
+      );
+
+      return { proConResults: posts, bookResults, totalCount };
+    }
+
+    if (isbn && type === 'book') {
+      const { posts, totalCount } =
+        await this.bookDiscussionsService.findAllDiscussionsByIsbn({
+          limit,
+          offset,
+          userId,
+          isbn,
+        });
+
+      return { bookResults: posts, proConResults, totalCount };
+    }
+
+    if (type === 'book') {
+      const { posts, totalCount } = await this.bookDiscussionsService.findAll({
+        limit,
+        offset,
+        userId,
+        query,
+      });
+
+      return { bookResults: posts, proConResults, totalCount };
+    }
   }
 }

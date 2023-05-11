@@ -18,12 +18,12 @@ export function convertCommentToReposnse(
     id: comment.id,
     author: comment.User.username,
     content: comment.content,
-    like: comment._count.CommentDislike,
-    dislike: comment._count.CommentLike,
+    like: comment._count.CommentLike,
+    dislike: comment._count.CommentDislike,
     createdAt: comment.createdAt.toISOString(),
     updatedAt: comment.updatedAt.toISOString(),
     likedByUser: comment.CommentLike.some((like) => like.userId === userId),
-    dislikedBytUser: comment.CommentDislike.some(
+    dislikedByUser: comment.CommentDislike.some(
       (dislike) => dislike.userId === userId,
     ),
   };

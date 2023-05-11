@@ -24,14 +24,14 @@ export class BooksService {
     });
   }
 
-  async findOneByIsbn(isbn: number) {
+  async findOneByIsbn(isbn: string) {
     return await this.prisma.book.findUnique({
       where: { isbn },
     });
   }
 
   async findBookDiscussionsByIsbn(
-    isbn: number,
+    isbn: string,
     offset: number,
     limit: number,
     userId: number,
@@ -87,7 +87,7 @@ export class BooksService {
     });
   }
 
-  async updateByIsbn(isbn: number, updateBookDto: UpdateBookDto) {
+  async updateByIsbn(isbn: string, updateBookDto: UpdateBookDto) {
     return await this.prisma.book.update({
       where: { isbn },
       data: updateBookDto,

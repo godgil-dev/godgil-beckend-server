@@ -68,8 +68,8 @@ model Book {
   author      String
   translator  String?
   description String
-  url         String
-  image       String
+  link        String
+  cover       String
   publisher   String
   pubdate     DateTime
   category    String

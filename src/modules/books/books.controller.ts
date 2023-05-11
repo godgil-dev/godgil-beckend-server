@@ -27,10 +27,7 @@ export class BooksController {
   @ApiBearerAuth()
   @Public()
   @Get(':isbn')
-  async findOne(
-    @Param('isbn', ParseIntPipe) isbn: number,
-    @Req() request: UserRequest,
-  ) {
+  async findOne(@Param('isbn') isbn: string, @Req() request: UserRequest) {
     return await this.booksService.findBookDiscussionsByIsbn(
       isbn,
       0,

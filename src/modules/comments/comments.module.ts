@@ -7,6 +7,7 @@ import { CommentsLikeModule } from 'src/modules/comments-like/comments-like.modu
 import { CommentsDislikeModule } from 'src/modules/comments-dislike/comments-dislike.module';
 import { ProConVoteModule } from '../pro-con-vote/pro-con-vote.module';
 import { PaginationService } from '../pagination/pagination.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   providers: [CommentsService, PaginationService],
@@ -17,6 +18,7 @@ import { PaginationService } from '../pagination/pagination.service';
     CommentsDislikeModule,
     PostsModule,
     ProConVoteModule,
+    NotificationModule,
   ],
   controllers: [CommentsController],
 })

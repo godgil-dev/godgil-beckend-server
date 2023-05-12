@@ -10,6 +10,7 @@ import { ProConVoteService } from '../pro-con-vote/pro-con-vote.service';
 import { convertCommentToReposnse } from './utils/comments.util';
 import { User } from '@prisma/client';
 import { PaginationService } from '../pagination/pagination.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class CommentsService {
@@ -17,6 +18,7 @@ export class CommentsService {
     private prisma: PrismaService,
     private proConVoteService: ProConVoteService,
     private paginationService: PaginationService,
+    private notificationService: NotificationService,
   ) {}
 
   async create(
@@ -36,6 +38,11 @@ export class CommentsService {
             username: true,
           },
         },
+        Post: {
+          select: {
+            authorId: true,
+          },
+        },
       },
     });
 
@@ -43,6 +50,13 @@ export class CommentsService {
       authorId,
       postId,
     );
+
+    if (comment.Post.authorId !== authorId) {
+      await this.notificationService.create({
+        commentId: comment.id,
+        userId: comment.Post.authorId,
+      });
+    }
 
     return {
       id: comment.id,

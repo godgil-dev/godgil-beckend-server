@@ -53,6 +53,14 @@ jobs:
           key: ${{ env.AWS_SSH_PRIVATE_KEY }}
           source: '.'
           target: '/var/www/imojumo'
+        env: # 여기서 환경 변수를 설정합니다.
+          ACCESS_TOKEN_EXPIRATION_TIME: ${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}
+          REFRESH_TOKEN_EXPIRATION_TIME: ${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}
+          SECRETKEY: ${{ secrets.SECRETKEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
 
       - name: SSH into EC2 instance
         uses: appleboy/ssh-action@master
@@ -61,6 +69,13 @@ jobs:
           username: ubuntu
           key: ${{ env.AWS_SSH_PRIVATE_KEY }}
           script: |
+            echo ACCESS_TOKEN_EXPIRATION_TIME=${{ env.ACCESS_TOKEN_EXPIRATION_TIME }} >> .env
+            echo REFRESH_TOKEN_EXPIRATION_TIME=${{ env.REFRESH_TOKEN_EXPIRATION_TIME }} >> .env
+            echo SECRETKEY=${{ env.SECRETKEY }} >> .env
+            echo DATABASE_URL=${{ env.DATABASE_URL }} >> .env
+            echo REDIS_HOST=${{ env.REDIS_HOST }} >> .env
+            echo REDIS_PORT=${{ env.REDIS_PORT }} >> .env
+            echo REDIS_PASSWORD=${{ env.REDIS_PASSWORD }} >> .env
             docker pull ${{ env.IMAGE_NAME }}
             cd /var/www/imojumo
             docker-compose down

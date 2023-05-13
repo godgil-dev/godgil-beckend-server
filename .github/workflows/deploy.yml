@@ -48,7 +48,7 @@ jobs:
           REFRESH_TOKEN_EXPIRATION_TIME: ${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}
           SECRETKEY: ${{ secrets.SECRETKEY }}
         run: |
-          cd $GITHUB_WORKSPACE
+          cd /var/www/imojumo
           docker-compose up -d
 
       - name: SSH into EC2 instance

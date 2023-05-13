@@ -21,15 +21,16 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.enableCors({
     credentials: true,
-    // origin: process.env.FRONTEND_URL,
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
     exposedHeaders: ['Authorization'],
   });
   app.use(cookieParser());
   app.useGlobalGuards(app.get(ThrottlerBehindProxyGuard));
+
   //swagger
   setupSwagger(app);
 
-  await app.listen(3001);
+  await app.listen(3000);
 
   if (module.hot) {
     module.hot.accept();

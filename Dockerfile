@@ -5,17 +5,18 @@ FROM node:16-alpine
 RUN mkdir -p /var/app/logs
 WORKDIR /var/app
 
-# Install Prisma CLI
-RUN yarn global add prisma
-
 # Copy dependency definitions
 COPY package*.json yarn.lock ./
-
-# Copy source code
-COPY . .
+COPY prisma/ ./
 
 # Install dependencies
 RUN yarn install --frozen-lockfile
+
+# Install Prisma CLI
+RUN yarn global add prisma
+
+# Copy source code
+COPY . .
 
 # Build app
 RUN yarn build

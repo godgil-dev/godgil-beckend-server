@@ -21,6 +21,9 @@ COPY . .
 # Build app
 RUN yarn build
 
+# Copy dist folder
+COPY dist/ ./
+
 # Install PM2 globally
 RUN yarn global add pm2
 

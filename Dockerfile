@@ -26,7 +26,7 @@ RUN ls -l
 RUN pwd
 
 # Copy dist folder
-COPY /var/app/dist ./dist/
+COPY ./dist ./dist/
 
 # Install PM2 globally
 RUN yarn global add pm2

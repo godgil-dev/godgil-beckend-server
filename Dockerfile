@@ -23,10 +23,10 @@ RUN yarn build
 
 RUN ls -l
 
-RUN ls -l dist
+RUN pwd
 
 # Copy dist folder
-COPY dist/ ./
+COPY /usr/src/app/dist ./dist/
 
 # Install PM2 globally
 RUN yarn global add pm2

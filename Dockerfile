@@ -21,6 +21,10 @@ COPY . .
 # Build app
 RUN yarn build
 
+RUN ls -l
+
+RUN ls -l dist
+
 # Copy dist folder
 COPY dist/ ./
 

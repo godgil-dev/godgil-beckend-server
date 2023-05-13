@@ -3,55 +3,61 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - deploy
+      - feature/deploy_wjdwjdtn92
+
+env:
+  ACCESS_TOKEN_EXPIRATION_TIME: ${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}
+  REFRESH_TOKEN_EXPIRATION_TIME: ${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}
+  SECRETKEY: ${{ secrets.SECRETKEY }}
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  REDIS_HOST: ${{ secrets.REDIS_HOST }}
+  REDIS_PORT: ${{ secrets.REDIS_PORT }}
+  REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+  AWS_REGION: us-west-2
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
+  AWS_SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create .env file
-        run: |
-          touch .env
-
-      - name: Set environment variables
-        run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}" >> .env
-          echo "REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}" >> .env
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
-          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
-          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          node-version: 16
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Build
-        run: yarn run build
-
-      - name: Transfer build output to EC2 instance
-        env:
-          PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+      - name: Install Docker Compose
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          rsync -avzr --delete --exclude 'node_modules' --exclude '.git' -e 'ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' . ubuntu@${{ secrets.AWS_EC2_HOST }}:/var/www/imojumo
-          rm -f private_key.pem
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-      - name: Install dependencies and start the application on EC2 instance
+      - name: Build and run Docker containers
         env:
-          PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ACCESS_TOKEN_EXPIRATION_TIME: ${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}
+          REFRESH_TOKEN_EXPIRATION_TIME: ${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}
+          SECRETKEY: ${{ secrets.SECRETKEY }}
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.AWS_EC2_HOST }} 'bash -s' < deploy.sh
-          rm -f private_key.pem
+          cd $GITHUB_WORKSPACE
+          docker-compose up -d
+
+      - name: SSH into EC2 instance
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.AWS_EC2_HOST }}
+          username: ubuntu
+          key: ${{ env.AWS_SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/imojumo
+            docker-compose down
+            docker-compose up -d

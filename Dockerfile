@@ -24,9 +24,6 @@ COPY .env .env
 # Build app
 RUN yarn build
 
-# Copy 'dist' directory
-COPY dist ./dist
-
 # Install PM2 globally
 RUN yarn global add pm2
 

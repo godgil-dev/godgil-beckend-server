@@ -18,15 +18,11 @@ RUN yarn global add prisma
 # Copy source code
 COPY . .
 
+# Add this line to copy .env file into Docker image
+COPY .env .env
+
 # Build app
 RUN yarn build
-
-RUN ls -l
-
-RUN pwd
-
-# Copy dist folder
-COPY ./dist ./dist/
 
 # Install PM2 globally
 RUN yarn global add pm2

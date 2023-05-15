@@ -40,6 +40,16 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      - name: Create .env file
+        run: |
+          echo "ACCESS_TOKEN_EXPIRATION_TIME=${{ env.ACCESS_TOKEN_EXPIRATION_TIME }}" > .env
+          echo "REFRESH_TOKEN_EXPIRATION_TIME=${{ env.REFRESH_TOKEN_EXPIRATION_TIME }}" >> .env
+          echo "SECRETKEY=${{ env.SECRETKEY }}" >> .env
+          echo "DATABASE_URL=${{ env.DATABASE_URL }}" >> .env
+          echo "REDIS_HOST=${{ env.REDIS_HOST }}" >> .env
+          echo "REDIS_PORT=${{ env.REDIS_PORT }}" >> .env
+          echo "REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}" >> .env
+
       - name: Build and push Docker image
         run: |
           docker build -t ${{ env.IMAGE_NAME }} .
@@ -70,13 +80,6 @@ jobs:
           key: ${{ env.AWS_SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/imojumo
-            echo "ACCESS_TOKEN_EXPIRATION_TIME=${{ env.ACCESS_TOKEN_EXPIRATION_TIME }}" > .env
-            echo "REFRESH_TOKEN_EXPIRATION_TIME=${{ env.REFRESH_TOKEN_EXPIRATION_TIME }}" >> .env
-            echo "SECRETKEY=${{ env.SECRETKEY }}" >> .env
-            echo "DATABASE_URL=${{ env.DATABASE_URL }}" >> .env
-            echo "REDIS_HOST=${{ env.REDIS_HOST }}" >> .env
-            echo "REDIS_PORT=${{ env.REDIS_PORT }}" >> .env
-            echo "REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}" >> .env
             docker pull ${{ env.IMAGE_NAME }}
             docker-compose down
             docker-compose up -d

@@ -20,12 +20,13 @@ model User {
 
   role Role? @relation(fields: [roleId], references: [id])
 
-  Post           Post[]
-  ProConVote     ProConVote[]
-  Comment        Comment[]
-  CommentLike    CommentLike[]
-  PostLike       PostLike[]
-  CommentDislike CommentDislike[]
+  Post                Post[]
+  ProConVote          ProConVote[]
+  Comment             Comment[]
+  CommentLike         CommentLike[]
+  PostLike            PostLike[]
+  CommentDislike      CommentDislike[]
+  CommentNotification CommentNotification[]
 }
 
 model Role {
@@ -146,8 +147,9 @@ model Comment {
   User User @relation(fields: [authorId], references: [id], onDelete: Cascade)
   Post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  CommentLike    CommentLike[]
-  CommentDislike CommentDislike[]
+  CommentLike         CommentLike[]
+  CommentDislike      CommentDislike[]
+  CommentNotification CommentNotification[]
 }
 
 model CommentLike {
@@ -191,4 +193,16 @@ model PostLike {
   User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+}
+
+model CommentNotification {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  commentId  Int
+  readStatus Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 }

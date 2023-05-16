@@ -30,10 +30,12 @@ import pinoConfig from './config/pino.config';
 import { OptionalJwtAuthGuard } from './modules/auth/guards/optional-jwt-auth.guard';
 import { ClientOpts } from 'redis';
 import { ConfigModule } from '@nestjs/config';
-import { RecommendationBooksModule } from './modules/recommendation-books/recommendation-books.module';
 import { PaginationService } from './modules/pagination/pagination.service';
 import * as redisStore from 'cache-manager-redis-store';
 import { MypageModule } from './modules/mypage/mypage.module';
+import { HomeModule } from './modules/home/home.module';
+// import { EventsGateway } from './websocket/comments-notification/gateways/events.gateway';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -71,8 +73,9 @@ import { MypageModule } from './modules/mypage/mypage.module';
       useFactory: pinoConfig,
     }),
     SearchModule,
-    RecommendationBooksModule,
     MypageModule,
+    HomeModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -86,6 +89,7 @@ import { MypageModule } from './modules/mypage/mypage.module';
     },
     ProConDiscussionsHelperService,
     PaginationService,
+    // EventsGateway,
   ],
 })
 export class AppModule {}

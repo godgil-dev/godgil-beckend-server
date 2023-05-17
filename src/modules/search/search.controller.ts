@@ -18,8 +18,9 @@ export class SearchController {
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', type: Number, required: false })
   @ApiQuery({ name: 'page', type: Number, required: false })
+  @ApiQuery({ name: 'isbn', type: String, required: false })
   @ApiQuery({ name: 'type', type: String, required: true })
-  @ApiQuery({ name: 'isbn', type: Number, required: false })
+  @ApiQuery({ name: 'query', type: String, required: false })
   @Public()
   @Get()
   async searchAll(

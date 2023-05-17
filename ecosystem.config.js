@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'imojumo',
-      script: 'dist/src/main.js',
+      script: 'dist/main.js',
       instances: 'max',
       exec_mode: 'cluster',
       // error_file: '/app/logs/error.log',

@@ -68,11 +68,11 @@ model Book {
   title       String
   author      String
   translator  String?
-  description String
+  description String?
   link        String
   cover       String
   publisher   String
-  pubdate     DateTime
+  pubDate     String
   category    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

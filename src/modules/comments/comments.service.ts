@@ -99,7 +99,27 @@ export class CommentsService {
       },
     });
 
-    return comments.map((comment) => convertCommentToReposnse(comment, userId));
+    console.log(comments);
+
+    const commentsWithProConVote = await Promise.all(
+      comments.map(async (comment) => {
+        const proConVote =
+          await this.proConVoteService.findOneByUserIdAndPostId(
+            comment.authorId,
+            postId,
+          );
+
+        return {
+          ...convertCommentToReposnse(comment, comment.authorId),
+          ...(proConVote && {
+            isPro: proConVote.isPro,
+          }),
+        };
+      }),
+    );
+
+    console.log(commentsWithProConVote);
+    return commentsWithProConVote;
   }
 
   async findAllByPostIdPages(postId: number, limit: number, offset: number) {

@@ -22,7 +22,7 @@ export class CreateBookDto {
   @ApiProperty()
   translator: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @ApiProperty()
   description: string;
@@ -45,7 +45,7 @@ export class CreateBookDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
-  pubdate: Date;
+  pubDate: string;
 
   @IsOptional()
   @IsString()

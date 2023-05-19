@@ -44,6 +44,7 @@ export class ProConDiscussionsController {
     );
   }
 
+  @ApiBearerAuth()
   @ApiQuery({ name: 'limit', type: Number, required: true })
   @ApiQuery({ name: 'page', type: Number, required: true })
   @Public()
@@ -57,7 +58,7 @@ export class ProConDiscussionsController {
     const { posts, totalCount } = await this.proConDiscussionsService.findAll({
       limit,
       offset,
-      userId: request?.user?.id,
+      userId: request?.user?.id || -1,
     });
     return {
       posts,

@@ -99,8 +99,6 @@ export class CommentsService {
       },
     });
 
-    console.log(comments);
-
     const commentsWithProConVote = await Promise.all(
       comments.map(async (comment) => {
         const proConVote =
@@ -110,7 +108,7 @@ export class CommentsService {
           );
 
         return {
-          ...convertCommentToReposnse(comment, comment.authorId),
+          ...convertCommentToReposnse(comment, userId),
           ...(proConVote && {
             isPro: proConVote.isPro,
           }),

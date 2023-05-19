@@ -62,6 +62,22 @@ export class ProConVoteService {
     });
   }
 
+  async findFirstByUserIdAndPostId(userId: number, postId: number) {
+    const proConDiscussions =
+      await this.proConDiscussionsHelperService.findOneByPostId(postId);
+
+    if (!proConDiscussions) {
+      return null;
+    }
+
+    return await this.prisma.proConVote.findFirst({
+      where: {
+        userId,
+        proConDiscussionId: proConDiscussions.id,
+      },
+    });
+  }
+
   async findFirstPro(proConDiscussionId: number) {
     return await this.prisma.proConVote.findFirst({
       where: {

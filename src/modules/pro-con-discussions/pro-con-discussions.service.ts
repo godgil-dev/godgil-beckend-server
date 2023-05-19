@@ -36,6 +36,7 @@ export class ProConDiscussionsService {
         username: string;
       };
     },
+    userId: number,
   ) {
     const proCount = await this.proConVoteService.proCount(
       post.ProConDiscussion.id,
@@ -47,6 +48,13 @@ export class ProConDiscussionsService {
     const [firstPro, firstCon] =
       await this.proConVoteService.findFirstVoteUsers(post.ProConDiscussion.id);
 
+    const proConVote = await this.proConVoteService.findFirstByUserIdAndPostId(
+      userId,
+      post.id,
+    );
+    const isPro = proConVote?.isPro || null;
+    const isVote = isPro !== null;
+
     return {
       id: post.id,
       author: post.User.username,
@@ -57,6 +65,8 @@ export class ProConDiscussionsService {
       updatedAt: post.updatedAt.toISOString(),
       proCount,
       conCount,
+      isVote,
+      isPro,
       proLeader: firstPro?.User
         ? {
             username: firstPro.User.username,
@@ -95,7 +105,7 @@ export class ProConDiscussionsService {
       include: prismaPostInclude(),
     });
 
-    const response = await this.convertPostToResponse(post);
+    const response = await this.convertPostToResponse(post, authorId);
 
     return { ...response, comments: [] };
   }
@@ -129,22 +139,13 @@ export class ProConDiscussionsService {
       },
       take: limit,
       skip: offset,
-      include: {
-        ProConDiscussion: {
-          select: {
-            id: true,
-          },
-        },
-        User: {
-          select: {
-            username: true,
-          },
-        },
-      },
+      include: prismaPostInclude(),
     });
 
     const totalCount = await this.prisma.proConDiscussion.count();
-    const response = posts.map(this.convertPostToResponse);
+    const response = posts.map((post) =>
+      this.convertPostToResponse(post, userId),
+    );
 
     return {
       posts: await Promise.all(response),
@@ -164,7 +165,7 @@ export class ProConDiscussionsService {
       throw new BadRequestException('찬성반대 토론 형태의 게시물이 아닙니다');
     }
 
-    const response = await this.convertPostToResponse(post);
+    const response = await this.convertPostToResponse(post, userId);
     const comments = await this.commentsService.findAllByPostId(id, userId);
 
     return { ...response, comments };
@@ -214,7 +215,7 @@ export class ProConDiscussionsService {
       include: prismaPostInclude(),
     });
 
-    const response = await this.convertPostToResponse(post);
+    const response = await this.convertPostToResponse(post, authorId);
     const comments = await this.commentsService.findAllByPostId(id, authorId);
     return { ...response, comments };
   }

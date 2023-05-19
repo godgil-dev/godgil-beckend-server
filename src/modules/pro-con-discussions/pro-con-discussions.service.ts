@@ -52,7 +52,8 @@ export class ProConDiscussionsService {
       userId,
       post.id,
     );
-    const isPro = proConVote?.isPro || null;
+
+    const isPro = proConVote ? proConVote.isPro : null;
     const isVote = isPro !== null;
 
     return {

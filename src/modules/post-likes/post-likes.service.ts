@@ -4,10 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { BookDiscussionsService } from '../book-discussions/book-discussions.service';
 
 @Injectable()
 export class PostLikesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private bookDiscussionsService: BookDiscussionsService,
+  ) {}
 
   async create(postId: number, userId: number) {
     const postLike = await this.findOne(postId, userId);
@@ -31,6 +35,20 @@ export class PostLikesService {
     });
 
     return { likeCount: await this.countByPostId(postId) };
+  }
+
+  async findAllByUserId(
+    userId: number,
+    limit: number,
+    offset: number,
+    sortBy: 'lastest' | 'popular',
+  ) {
+    return this.bookDiscussionsService.findLikedPosts({
+      limit,
+      offset,
+      userId,
+      sortBy,
+    });
   }
 
   async findOne(postId: number, userId: number) {

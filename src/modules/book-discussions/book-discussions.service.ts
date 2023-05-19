@@ -93,7 +93,56 @@ export class BookDiscussionsService {
       where,
     });
 
-    console.log(posts);
+    return { posts: posts.map(postToResponse), totalCount };
+  }
+
+  async findLikedPosts({
+    limit,
+    offset,
+    userId,
+    query = null,
+    sortBy = 'lastest',
+  }: FindAllType) {
+    const queryString = query !== null && {
+      title: {
+        search: `*${query}*`,
+      },
+    };
+
+    const where = {
+      ...queryString,
+      PostLike: {
+        some: {
+          userId,
+        },
+      },
+    };
+
+    const orderByLatest = {
+      createdAt: 'desc',
+    };
+
+    const orderByPopular = {
+      PostLike: {
+        _count: 'desc',
+      },
+    };
+
+    const orderBy =
+      { lastest: orderByLatest, popular: orderByPopular }[sortBy] || {};
+
+    const posts = await this.prisma.post.findMany({
+      where,
+      orderBy,
+      take: limit,
+      skip: offset,
+      include: prismaPostInclude(userId),
+    });
+
+    const totalCount = await this.prisma.post.count({
+      where,
+    });
+
     return { posts: posts.map(postToResponse), totalCount };
   }
 

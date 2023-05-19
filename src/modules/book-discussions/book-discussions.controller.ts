@@ -20,7 +20,6 @@ import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { BookDiscussionsService } from './book-discussions.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
-import { AuthService } from '../auth/auth.service';
 import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 
 @ApiTags('book-discussions')
@@ -28,7 +27,6 @@ import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 export class BookDiscussionsController {
   constructor(
     private readonly bookDiscussionsService: BookDiscussionsService,
-    private readonly authService: AuthService,
   ) {}
 
   @ApiBearerAuth()

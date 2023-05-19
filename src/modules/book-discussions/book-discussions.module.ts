@@ -5,19 +5,11 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { PostsService } from 'src/modules/posts/posts.service';
 import { BooksModule } from '../books/books.module';
 import { CommentsModule } from '../comments/comments.module';
-import { PostLikesModule } from '../post-likes/post-likes.module';
-import { AuthModule } from '../auth/auth.module';
 
 @Module({
   controllers: [BookDiscussionsController],
   providers: [BookDiscussionsService, PostsService],
-  imports: [
-    PrismaModule,
-    BooksModule,
-    CommentsModule,
-    PostLikesModule,
-    AuthModule,
-  ],
+  imports: [PrismaModule, BooksModule, CommentsModule],
   exports: [BookDiscussionsService],
 })
 export class BookDiscussionsModule {}

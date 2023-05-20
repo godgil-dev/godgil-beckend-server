@@ -13,7 +13,6 @@ export class HomeController {
   @ApiBearerAuth()
   @Get()
   findAll(@Req() request: UserRequest) {
-    console.log(request.user?.id);
     return this.homeService.findAll(request.user?.id || -1);
   }
 }

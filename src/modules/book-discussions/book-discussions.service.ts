@@ -54,7 +54,7 @@ export class BookDiscussionsService {
   }: FindAllType) {
     const queryString = query !== null && {
       title: {
-        search: `*${query}*`,
+        contains: query,
       },
     };
 
@@ -190,7 +190,6 @@ export class BookDiscussionsService {
     }
 
     const comments = await this.commentsService.findAllByPostId(id, userId);
-
     return { ...postToResponse(post), comments };
   }
 

@@ -125,7 +125,7 @@ export class ProConDiscussionsService {
       },
       ...(query !== null && {
         title: {
-          search: `*${query}*`,
+          contains: query,
         },
       }),
       ...(myPostsOnly && {

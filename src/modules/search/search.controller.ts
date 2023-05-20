@@ -27,7 +27,6 @@ export class SearchController {
     @Query() searchAllDto: SearchAllDto,
     @Req() request: UserRequest,
   ) {
-    console.log(searchAllDto);
     const { page, limit, query, type, isbn } = searchAllDto;
 
     const { proConResults, bookResults } = await this.searchService.searchAll(

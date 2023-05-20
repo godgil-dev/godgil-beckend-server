@@ -116,7 +116,6 @@ export class CommentsService {
       }),
     );
 
-    console.log(commentsWithProConVote);
     return commentsWithProConVote;
   }
 

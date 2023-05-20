@@ -119,15 +119,17 @@ export class ProConDiscussionsService {
     query = null,
     myPostsOnly = false,
   }: FindAllType) {
+    const queryString = query !== null && {
+      title: {
+        contains: query,
+      },
+    };
+
     const where = {
       NOT: {
         ProConDiscussion: null,
       },
-      ...(query !== null && {
-        title: {
-          contains: query,
-        },
-      }),
+      ...queryString,
       ...(myPostsOnly && {
         authorId: userId,
       }),
@@ -143,7 +145,9 @@ export class ProConDiscussionsService {
       include: prismaPostInclude(),
     });
 
-    const totalCount = await this.prisma.proConDiscussion.count();
+    const totalCount = await this.prisma.post.count({
+      where,
+    });
     const response = posts.map((post) =>
       this.convertPostToResponse(post, userId),
     );

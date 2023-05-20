@@ -9,7 +9,7 @@ export class SearchAllDto extends PaginationQueryDto {
   @IsIn(['all', 'book', 'proCon'])
   type: string;
 
-  @IsNumberString()
+  @IsString()
   @IsOptional()
   isbn?: string;
 }

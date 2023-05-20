@@ -29,26 +29,18 @@ export class SearchController {
   ) {
     const { page, limit, query, type, isbn } = searchAllDto;
 
-    const offset = (page - 1) * limit;
-    const { proConResults, bookResults, totalCount } =
-      await this.searchService.searchAll(
-        limit,
-        offset,
-        request.user?.id || -1,
-        query,
-        type,
-        isbn,
-      );
+    const { proConResults, bookResults } = await this.searchService.searchAll(
+      limit,
+      page,
+      request.user?.id || -1,
+      query,
+      type,
+      isbn,
+    );
 
     return {
       proConResults,
       bookResults,
-      pageInfo: {
-        page,
-        totalCount,
-        currentCount: proConResults.length + bookResults.length,
-        totalPage: Math.ceil(totalCount / limit),
-      },
     };
   }
 }

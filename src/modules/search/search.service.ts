@@ -11,29 +11,51 @@ export class SearchService {
 
   async searchAll(
     limit: number,
-    offset: number,
+    page: number,
     userId: number,
     query: string,
     type: string,
     isbn?: string,
   ) {
-    let proConResults = [];
-    let bookResults = [];
+    let offset = (page - 1) * limit;
 
     if (type === 'all') {
       limit = 3;
       offset = 0;
 
-      proConResults = await this.proConDiscussionsService
-        .findAll({ limit, offset, query })
-        .then(({ posts }) => posts);
+      const proConResults = await this.proConDiscussionsService.findAll({
+        limit,
+        offset,
+        query,
+      });
 
-      bookResults = await this.bookDiscussionsService
-        .findAll({ limit, offset, userId, query })
-        .then(({ posts }) => posts);
+      const bookResults = await this.bookDiscussionsService.findAll({
+        limit,
+        offset,
+        userId,
+        query,
+      });
 
-      const totalCount = proConResults.length + bookResults.length;
-      return { proConResults, bookResults, totalCount };
+      return {
+        proConResults: {
+          posts: proConResults.posts,
+          pageInfo: {
+            page,
+            totalCount: proConResults.totalCount,
+            currentCount: proConResults.posts.length,
+            totalPage: Math.ceil(proConResults.totalCount / limit),
+          },
+        },
+        bookResults: {
+          posts: bookResults.posts,
+          pageInfo: {
+            page,
+            totalCount: bookResults.totalCount,
+            currentCount: bookResults.posts.length,
+            totalPage: Math.ceil(bookResults.totalCount / limit),
+          },
+        },
+      };
     }
 
     if (type === 'proCon') {
@@ -45,7 +67,18 @@ export class SearchService {
         },
       );
 
-      return { proConResults: posts, bookResults, totalCount };
+      return {
+        proConResults: {
+          posts,
+          pageInfo: {
+            page,
+            totalCount,
+            currentCount: posts.length,
+            totalPage: Math.ceil(totalCount / limit),
+          },
+        },
+        totalCount,
+      };
     }
 
     if (isbn && type === 'book') {
@@ -57,7 +90,18 @@ export class SearchService {
           isbn,
         });
 
-      return { bookResults: posts, proConResults, totalCount };
+      return {
+        bookResults: {
+          posts,
+          pageInfo: {
+            page,
+            totalCount,
+            currentCount: posts.length,
+            totalPage: Math.ceil(totalCount / limit),
+          },
+        },
+        totalCount,
+      };
     }
 
     if (type === 'book') {
@@ -68,7 +112,18 @@ export class SearchService {
         query,
       });
 
-      return { bookResults: posts, proConResults, totalCount };
+      return {
+        bookResults: {
+          posts,
+          pageInfo: {
+            page,
+            totalCount,
+            currentCount: posts.length,
+            totalPage: Math.ceil(totalCount / limit),
+          },
+        },
+        totalCount,
+      };
     }
   }
 }

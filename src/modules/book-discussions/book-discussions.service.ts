@@ -105,11 +105,14 @@ export class BookDiscussionsService {
   }: FindAllType) {
     const queryString = query !== null && {
       title: {
-        search: `*${query}*`,
+        contains: query,
       },
     };
 
     const where = {
+      NOT: {
+        BookDiscussion: null,
+      },
       ...queryString,
       PostLike: {
         some: {

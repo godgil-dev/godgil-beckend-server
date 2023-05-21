@@ -8,6 +8,7 @@ export const postToResponse = (
     Comment?: Comment[];
     User: {
       username: string;
+      avatarUrl: string;
     };
     PostLike: PostLike[];
     _count: { PostLike: number };
@@ -15,6 +16,7 @@ export const postToResponse = (
 ) => ({
   id: post.id,
   author: post.User.username,
+  avatarUrl: post.User.avatarUrl,
   title: post.title,
   content: post.content,
   views: post.views,
@@ -35,6 +37,7 @@ export const prismaPostInclude = (userId: number) => ({
   User: {
     select: {
       username: true,
+      avatarUrl: true,
     },
   },
   PostLike: {

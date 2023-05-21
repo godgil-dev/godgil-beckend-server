@@ -9,6 +9,8 @@ import { convertUserToResponse } from './utils/response.uitls';
 import UserRequest from '../auth/types/user-request.interface';
 
 export const roundsOfHashing = 10;
+const DEFAULT_IMAGE_URL =
+  'https://www.thechooeok.com/common/img/default_profile.png';
 
 @Injectable()
 export class UsersService {
@@ -54,9 +56,10 @@ export class UsersService {
     );
 
     createUserDto.password = hashedPassword;
+    const avatarUrl = createUserDto.avatarUrl || DEFAULT_IMAGE_URL;
 
     const user = await this.prisma.user.create({
-      data: { ...createUserDto, username: newUsername },
+      data: { ...createUserDto, username: newUsername, avatarUrl },
       include: { role: true },
     });
 

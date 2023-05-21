@@ -6,12 +6,23 @@ import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
 import { convertUserToResponse } from './utils/response.uitls';
+import UserRequest from '../auth/types/user-request.interface';
 
 export const roundsOfHashing = 10;
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
+
+  exclude<User, Key extends keyof User>(
+    user: User,
+    keys: Key[],
+  ): Omit<User, Key> {
+    for (const key of keys) {
+      delete user[key];
+    }
+    return user;
+  }
 
   async create(createUserDto: CreateUserDto) {
     const usernamePrefix = createUserDto.email.split('@')[0];
@@ -52,8 +63,9 @@ export class UsersService {
     return convertUserToResponse(user);
   }
 
-  findAll() {
-    return this.prisma.user.findMany();
+  async findAll() {
+    const users = await this.prisma.user.findMany();
+    return users.map((user) => this.exclude(user, ['password']));
   }
 
   findOne(username: string) {
@@ -82,11 +94,13 @@ export class UsersService {
       );
     }
 
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
       include: { role: true },
     });
+
+    return convertUserToResponse(user);
   }
 
   async remove(id: number) {
@@ -105,10 +119,11 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } });
   }
 
-  async uploadAvatar(userId: number, fileName: string) {
-    const avatarUrl = `uploads/${fileName}`;
+  async uploadAvatar(request: UserRequest, fileName: string) {
+    const avatarUrl = this.generateAvatarUrl(request, fileName);
+    console.log(avatarUrl);
     const user = await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: request.user.id },
       data: { avatarUrl },
       include: { role: true },
     });
@@ -120,15 +135,15 @@ export class UsersService {
     let user = await this.findOneById(userId);
 
     if (user.avatarUrl) {
-      const filePath = path.join(
-        __dirname,
-        'uploads',
-        '..',
-        '..',
-        user.avatarUrl,
-      );
+      // const filePath = path.join(
+      //   __dirname,
+      //   'uploads',
+      //   '..',
+      //   '..',
+      //   user.avatarUrl,
+      // );
 
-      fs.unlinkSync(filePath);
+      // fs.unlinkSync(filePath);
       user = await this.prisma.user.update({
         where: { id: userId },
         data: { avatarUrl: null },
@@ -137,5 +152,12 @@ export class UsersService {
     }
 
     return convertUserToResponse(user);
+  }
+
+  generateAvatarUrl(request: UserRequest, fileName: string) {
+    const host = request.protocol + '://' + request.get('host'); // 호스트 정보 가져오기
+    const avatarUrl = `${host}/uploads/${fileName}`; // 아바타 URL 생성
+
+    return avatarUrl;
   }
 }

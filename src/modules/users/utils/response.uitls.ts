@@ -2,6 +2,7 @@ import { Role, User } from '@prisma/client';
 
 type convertUserToResponseType = User & {
   role: Role;
+  avatarUrl: string;
 };
 
 export function convertUserToResponse(user: convertUserToResponseType) {
@@ -9,6 +10,7 @@ export function convertUserToResponse(user: convertUserToResponseType) {
 
   return {
     username: user.username,
+    avatarUrl: user.avatarUrl,
     email: user.email,
     role,
     createdAt: user.createdAt,

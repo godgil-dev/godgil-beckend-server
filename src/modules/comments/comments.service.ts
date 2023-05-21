@@ -36,6 +36,7 @@ export class CommentsService {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
         Post: {
@@ -61,6 +62,7 @@ export class CommentsService {
     return {
       id: comment.id,
       author: comment.User.username,
+      avatarUrl: comment.User.avatarUrl,
       content: comment.content,
       like: 0,
       dislike: 0,
@@ -86,6 +88,7 @@ export class CommentsService {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
         _count: {
@@ -131,6 +134,7 @@ export class CommentsService {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
       },
@@ -187,6 +191,7 @@ export class CommentsService {
         User: {
           select: {
             username: true,
+            avatarUrl: true,
           },
         },
         _count: {
@@ -213,6 +218,7 @@ export class CommentsService {
 
     return {
       author: comment.User.username,
+      avatarUrl: comment.User.avatarUrl,
       content: comment.content,
       like: comment._count.CommentLike,
       dislike: comment._count.CommentDislike,

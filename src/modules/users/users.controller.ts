@@ -52,15 +52,11 @@ export class UsersController {
     @Req() request: UserRequest,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const avatarUrl = `uploads/${file.filename}`;
-    const user = await this.usersService.uploadAvatar(
-      request.user.id,
-      file.filename,
-    );
-    const host = request.protocol + '://' + request.get('host');
+    // const avatarUrl = `uploads/${file.filename}`;
+    const user = await this.usersService.uploadAvatar(request, file.filename);
 
     return {
-      avatarUrl: `${host}/${avatarUrl}`,
+      avatarUrl: user.avatarUrl,
     };
   }
 
@@ -69,7 +65,7 @@ export class UsersController {
   @ApiCreatedResponse({ type: UserEntity })
   async removeAvatar(@Req() request: UserRequest) {
     const user = await this.usersService.removeAvatar(request.user.id);
-    console.log(user);
+
     return new UserEntity(user);
   }
 

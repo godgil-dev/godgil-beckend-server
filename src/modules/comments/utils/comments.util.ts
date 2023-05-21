@@ -4,6 +4,7 @@ export function convertCommentToReposnse(
   comment: Comment & {
     User: {
       username: string;
+      avatarUrl: string;
     };
     _count: {
       CommentLike: number;
@@ -17,6 +18,7 @@ export function convertCommentToReposnse(
   return {
     id: comment.id,
     author: comment.User.username,
+    avatarUrl: comment.User.avatarUrl,
     content: comment.content,
     like: comment._count.CommentLike,
     dislike: comment._count.CommentDislike,

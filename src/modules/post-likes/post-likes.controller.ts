@@ -47,8 +47,8 @@ export class PostLikesController {
   @Get('/me')
   async findAll(
     @Query() paginationQueryDto: PaginationQueryDto,
+    sortBy: 'lastest' | 'popular' = 'lastest',
     @Req() request: UserRequest,
-    @Query() sortBy: 'lastest' | 'popular' = 'lastest',
   ) {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;

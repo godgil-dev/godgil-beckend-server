@@ -2,5 +2,5 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('throttler', () => ({
   ttl: 60,
-  limit: 20,
+  limit: 40,
 }));

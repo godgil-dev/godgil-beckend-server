@@ -170,7 +170,7 @@ export class BookDiscussionsService {
     }
 
     const posts = await this.prisma.post.findMany({
-      where: { id: bookDiscussion.postId },
+      where: { BookDiscussion: { Book: { isbn } } },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,

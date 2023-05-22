@@ -21,7 +21,11 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.enableCors({
     credentials: true,
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'https://imojumo.com',
+    ],
     exposedHeaders: ['Authorization'],
   });
   app.use(cookieParser());

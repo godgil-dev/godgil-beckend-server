@@ -15,7 +15,7 @@ export class SecurityMiddleware implements NestMiddleware {
           fontSrc: ["'self'", 'https:', 'data:'],
         },
       },
-      // hidePoweredBy: true,
+      crossOriginEmbedderPolicy: false,
     })(req, res, next);
   }
 }

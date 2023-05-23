@@ -23,7 +23,6 @@ import {
 } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerConfig } from './multer-config';
 import UserRequest from '../auth/types/user-request.interface';
 
 @Controller('users')

@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -122,12 +126,14 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } });
   }
 
-  async uploadAvatar(request: UserRequest, fileName: string) {
-    const avatarUrl = this.generateAvatarUrl(request, fileName);
-    console.log(avatarUrl);
+  async uploadAvatar(request: UserRequest, file: Express.MulterS3.File) {
+    if (!file) {
+      throw new BadRequestException('파일이 존재하지 않습니다.');
+    }
+
     const user = await this.prisma.user.update({
       where: { id: request.user.id },
-      data: { avatarUrl },
+      data: { avatarUrl: file.location },
       include: { role: true },
     });
 

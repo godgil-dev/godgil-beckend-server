@@ -47,13 +47,12 @@ export class UsersController {
     },
   })
   @ApiBearerAuth()
-  @UseInterceptors(FileInterceptor('file', multerConfig))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
     @Req() request: UserRequest,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.MulterS3.File,
   ) {
-    // const avatarUrl = `uploads/${file.filename}`;
-    const user = await this.usersService.uploadAvatar(request, file.filename);
+    const user = await this.usersService.uploadAvatar(request, file);
 
     return {
       avatarUrl: user.avatarUrl,

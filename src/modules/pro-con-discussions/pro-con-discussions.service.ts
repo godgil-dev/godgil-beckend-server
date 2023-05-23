@@ -34,6 +34,7 @@ export class ProConDiscussionsService {
       };
       User: {
         username: string;
+        avatarUrl: string;
       };
     },
     userId: number,
@@ -59,6 +60,7 @@ export class ProConDiscussionsService {
     return {
       id: post.id,
       author: post.User.username,
+      avatarUrl: post.User.avatarUrl,
       title: post.title,
       content: post.content,
       views: post.views,

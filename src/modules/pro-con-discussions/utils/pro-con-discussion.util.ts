@@ -7,6 +7,7 @@ export const prismaPostInclude = () => ({
   User: {
     select: {
       username: true,
+      avatarUrl: true,
     },
   },
 });

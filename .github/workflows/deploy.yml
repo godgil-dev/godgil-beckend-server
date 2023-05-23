@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - dev
+      - feature/s3-image-upload_wjdwjdtn92
 
 env:
   ACCESS_TOKEN_EXPIRATION_TIME: ${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}

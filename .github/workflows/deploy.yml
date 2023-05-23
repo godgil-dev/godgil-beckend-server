@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - dev
-
 env:
   ACCESS_TOKEN_EXPIRATION_TIME: ${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}
   REFRESH_TOKEN_EXPIRATION_TIME: ${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}
@@ -13,10 +12,11 @@ env:
   REDIS_HOST: ${{ secrets.REDIS_HOST }}
   REDIS_PORT: ${{ secrets.REDIS_PORT }}
   REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-  AWS_REGION: us-west-2
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
+  AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
   AWS_SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
   IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE }}
 
@@ -49,6 +49,10 @@ jobs:
           echo "REDIS_HOST=${{ env.REDIS_HOST }}" >> .env
           echo "REDIS_PORT=${{ env.REDIS_PORT }}" >> .env
           echo "REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}" >> .env
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_BUCKET_NAME=${{ env.AWS_BUCKET_NAME }}" >> .env
 
       - name: Build and push Docker image
         run: |

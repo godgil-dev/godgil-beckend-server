@@ -23,7 +23,6 @@ import {
 } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerConfig } from './multer-config';
 import UserRequest from '../auth/types/user-request.interface';
 
 @Controller('users')
@@ -47,13 +46,12 @@ export class UsersController {
     },
   })
   @ApiBearerAuth()
-  @UseInterceptors(FileInterceptor('file', multerConfig))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
     @Req() request: UserRequest,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.MulterS3.File,
   ) {
-    // const avatarUrl = `uploads/${file.filename}`;
-    const user = await this.usersService.uploadAvatar(request, file.filename);
+    const user = await this.usersService.uploadAvatar(request, file);
 
     return {
       avatarUrl: user.avatarUrl,

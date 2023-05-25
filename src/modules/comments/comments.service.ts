@@ -154,6 +154,14 @@ export class CommentsService {
         orderBy: {
           createdAt: 'desc',
         },
+        include: {
+          Post: {
+            select: {
+              BookDiscussion: true,
+              ProConDiscussion: true,
+            },
+          },
+        },
         take: limit,
         skip: offset,
       }),
@@ -162,7 +170,20 @@ export class CommentsService {
 
     return {
       comments: comments.map((comment) => {
+        const type = (() => {
+          if (comment.Post.BookDiscussion !== null) {
+            return 'book';
+          }
+
+          if (comment.Post.ProConDiscussion !== null) {
+            return 'proCon';
+          }
+
+          return null;
+        })();
+
         return {
+          type,
           id: comment.id,
           postId: comment.postId,
           content: comment.content,

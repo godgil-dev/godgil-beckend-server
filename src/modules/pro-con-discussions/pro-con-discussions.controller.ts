@@ -19,9 +19,9 @@ import { UpdateProConDiscussionDto } from './dto/update-pro-con-discussion.dto';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import UserRequest from 'src/modules/auth/types/user-request.interface';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
-import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
 import { AuthService } from '../auth/auth.service';
+import { ListProConDiscussionQueryDto } from './dto/list-pro-con-discussion-query.dto';
 
 @ApiTags('pro-con-discussions')
 @Controller('pro-con-discussions')
@@ -47,18 +47,20 @@ export class ProConDiscussionsController {
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', type: Number, required: true })
   @ApiQuery({ name: 'page', type: Number, required: true })
+  @ApiQuery({ name: 'myPostsOnly', type: Boolean, required: false })
   @Public()
   @Get()
   async findAll(
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() listProConDiscussionQueryDto: ListProConDiscussionQueryDto,
     @Req() request: UserRequest,
   ) {
-    const { page, limit } = paginationQueryDto;
+    const { page, limit, myPostsOnly } = listProConDiscussionQueryDto;
     const offset = (page - 1) * limit;
     const { posts, totalCount } = await this.proConDiscussionsService.findAll({
       limit,
       offset,
       userId: request?.user?.id || -1,
+      myPostsOnly,
     });
     return {
       posts,

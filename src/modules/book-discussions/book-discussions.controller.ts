@@ -16,11 +16,11 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import UserRequest from 'src/modules/auth/types/user-request.interface';
 import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
-import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { BookDiscussionsService } from './book-discussions.service';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
 import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
+import { ListBookDiscussionQueryDto } from './dto/list-book-discussion-query.dto';
 
 @ApiTags('book-discussions')
 @Controller('book-discussions')
@@ -45,21 +45,23 @@ export class BookDiscussionsController {
   @ApiQuery({ name: 'limit', type: Number, required: true })
   @ApiQuery({ name: 'page', type: Number, required: true })
   @ApiQuery({ name: 'sortBy', type: String, required: false })
+  @ApiQuery({ name: 'myPostsOnly', type: Boolean, required: false })
   @Public()
   @Get()
   async findAll(
-    @Query() paginationQueryDto: PaginationQueryDto,
-    sortBy: 'lastest' | 'popular' = 'lastest',
+    @Query() listBookDiscussionQueryDto: ListBookDiscussionQueryDto,
     @Req() request: UserRequest,
   ) {
-    const { page, limit } = paginationQueryDto;
+    const { page, limit, sortBy, myPostsOnly } = listBookDiscussionQueryDto;
     const offset = (page - 1) * limit;
+    console.log(page, limit, sortBy, myPostsOnly);
 
     const { posts, totalCount } = await this.bookDiscussionsService.findAll({
       limit,
       offset,
       userId: request.user?.id || -1,
       sortBy,
+      myPostsOnly,
     });
 
     return {

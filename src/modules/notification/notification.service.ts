@@ -15,7 +15,7 @@ export class NotificationService {
   async getNotificationsForUser(userId: number) {
     const commentNotifications = await this.prisma.commentNotification.findMany(
       {
-        where: { userId, readStatus: false },
+        where: { userId },
         include: {
           Comment: {
             include: {

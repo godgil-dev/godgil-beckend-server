@@ -45,8 +45,8 @@ export class NotificationService {
       })();
 
       return {
-        type,
         id: notification.id,
+        type,
         postId: notification.Comment.postId,
         commentId: notification.commentId,
         content: notification.Comment.content,
@@ -61,11 +61,35 @@ export class NotificationService {
     const notification = await this.prisma.commentNotification.update({
       where: { id: notificationId },
       data: { readStatus: true },
-      include: { Comment: true },
+      include: {
+        Comment: {
+          include: {
+            Post: {
+              select: {
+                BookDiscussion: true,
+                ProConDiscussion: true,
+              },
+            },
+          },
+        },
+      },
     });
+
+    const type = (() => {
+      if (notification.Comment.Post.BookDiscussion !== null) {
+        return 'book';
+      }
+
+      if (notification.Comment.Post.ProConDiscussion !== null) {
+        return 'proCon';
+      }
+
+      return null;
+    })();
 
     return {
       id: notification.id,
+      type,
       postId: notification.Comment.postId,
       commentId: notification.commentId,
       content: notification.Comment.content,

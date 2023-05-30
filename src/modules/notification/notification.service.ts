@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -47,5 +47,25 @@ export class NotificationService {
       updatedAt: notification.Comment.updatedAt,
       readStatus: notification.readStatus,
     };
+  }
+
+  async findOne(notificationId: number) {
+    return await this.prisma.commentNotification.findFirst({
+      where: { id: notificationId },
+    });
+  }
+
+  async remove(notificationId: number) {
+    const notification = await this.findOne(notificationId);
+
+    if (!notification) {
+      throw new NotFoundException(
+        `Not found notification: [${notificationId}]`,
+      );
+    }
+
+    return await this.prisma.commentNotification.delete({
+      where: { id: notificationId },
+    });
   }
 }

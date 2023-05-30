@@ -5,6 +5,9 @@ import {
   Param,
   Req,
   ParseIntPipe,
+  Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -25,5 +28,12 @@ export class NotificationController {
   @Patch(':id/read')
   async markAsRead(@Param('id', ParseIntPipe) id: number) {
     return await this.notificationService.markAsRead(id);
+  }
+
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.notificationService.remove(id);
   }
 }

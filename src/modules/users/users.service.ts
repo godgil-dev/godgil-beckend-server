@@ -128,17 +128,19 @@ export class UsersService {
 
   async remove(id: number) {
     const user = await this.findOneById(id);
+    const { avatarUrl } = user;
 
-    if (user.avatarUrl) {
-      const filePath = path.join(
-        __dirname,
-        'uploads',
-        '..',
-        '..',
-        user.avatarUrl,
-      );
-      fs.unlinkSync(filePath);
+    if (avatarUrl && avatarUrl !== DEFAULT_IMAGE_URL) {
+      const fileName = avatarUrl.slice(avatarUrl.lastIndexOf('/') + 1);
+      const input = {
+        Bucket: this.configService.get('AWS_BUCKET_NAME'),
+        Key: fileName,
+      };
+
+      const command = new DeleteObjectCommand(input);
+      await this.s3.send(command);
     }
+
     return this.prisma.user.delete({ where: { id } });
   }
 
@@ -156,34 +158,12 @@ export class UsersService {
     return convertUserToResponse(user);
   }
 
-  //   async deleteS3File(file_dir , file_name)  {
-  //     let params = {
-  //       Bucket: 'community.bvoat.com',
-  //       Key: file_dir.concat('/', file_name)
-  //     };
-
-  //     try {
-  //       s3.deleteObject(params, function (error, data) {
-  //         if (error) {
-  //           console.log('err: ', error, error.stack);
-  //         } else {
-  //           console.log(data, " 정상 삭제 되었습니다.");
-  //         }
-  //       })
-  //     } catch(err) {
-  //       console.log(err);
-  //       throw err;
-  //     }
-  // }
-
   async removeAvatar(userId: number) {
     let user = await this.findOneById(userId);
     const { avatarUrl } = user;
 
     if (avatarUrl && avatarUrl !== DEFAULT_IMAGE_URL) {
       const fileName = avatarUrl.slice(avatarUrl.lastIndexOf('/') + 1);
-      console.log(fileName);
-
       const input = {
         Bucket: this.configService.get('AWS_BUCKET_NAME'),
         Key: fileName,

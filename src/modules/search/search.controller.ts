@@ -1,19 +1,14 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { SearchService } from './search.service';
-import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import UserRequest from '../auth/types/user-request.interface';
-import { AuthService } from '../auth/auth.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { SearchAllDto } from './dto/search-all.dto';
 
 @ApiTags('sarch')
 @Controller('search')
 export class SearchController {
-  constructor(
-    private readonly searchService: SearchService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly searchService: SearchService) {}
 
   @ApiBearerAuth()
   @ApiQuery({ name: 'limit', type: Number, required: false })
@@ -39,8 +34,8 @@ export class SearchController {
     );
 
     return {
-      proConResults,
       bookResults,
+      proConResults,
     };
   }
 }

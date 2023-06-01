@@ -11,6 +11,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { convertUserToResponse } from './utils/response.uitls';
 import UserRequest from '../auth/types/user-request.interface';
+import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { ConfigService } from '@nestjs/config';
 
 export const roundsOfHashing = 10;
 const DEFAULT_IMAGE_URL =
@@ -18,7 +20,21 @@ const DEFAULT_IMAGE_URL =
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private s3: S3Client;
+
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    this.s3 = new S3Client({
+      region: this.configService.get('AWS_REGION'),
+      credentials: {
+        accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+      },
+      signingEscapePath: true,
+    });
+  }
 
   exclude<User, Key extends keyof User>(
     user: User,
@@ -112,17 +128,19 @@ export class UsersService {
 
   async remove(id: number) {
     const user = await this.findOneById(id);
+    const { avatarUrl } = user;
 
-    if (user.avatarUrl) {
-      const filePath = path.join(
-        __dirname,
-        'uploads',
-        '..',
-        '..',
-        user.avatarUrl,
-      );
-      fs.unlinkSync(filePath);
+    if (avatarUrl && avatarUrl !== DEFAULT_IMAGE_URL) {
+      const fileName = avatarUrl.slice(avatarUrl.lastIndexOf('/') + 1);
+      const input = {
+        Bucket: this.configService.get('AWS_BUCKET_NAME'),
+        Key: fileName,
+      };
+
+      const command = new DeleteObjectCommand(input);
+      await this.s3.send(command);
     }
+
     return this.prisma.user.delete({ where: { id } });
   }
 
@@ -142,20 +160,21 @@ export class UsersService {
 
   async removeAvatar(userId: number) {
     let user = await this.findOneById(userId);
+    const { avatarUrl } = user;
 
-    if (user.avatarUrl) {
-      // const filePath = path.join(
-      //   __dirname,
-      //   'uploads',
-      //   '..',
-      //   '..',
-      //   user.avatarUrl,
-      // );
+    if (avatarUrl && avatarUrl !== DEFAULT_IMAGE_URL) {
+      const fileName = avatarUrl.slice(avatarUrl.lastIndexOf('/') + 1);
+      const input = {
+        Bucket: this.configService.get('AWS_BUCKET_NAME'),
+        Key: fileName,
+      };
 
-      // fs.unlinkSync(filePath);
+      const command = new DeleteObjectCommand(input);
+      await this.s3.send(command);
+
       user = await this.prisma.user.update({
         where: { id: userId },
-        data: { avatarUrl: null },
+        data: { avatarUrl: DEFAULT_IMAGE_URL },
         include: { role: true },
       });
     }

@@ -7,14 +7,12 @@ import {
   Post,
   Req,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
   ApiCookieAuth,
-  ApiHeader,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';

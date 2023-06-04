@@ -24,6 +24,7 @@ import {
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import UserRequest from '../auth/types/user-request.interface';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -98,6 +99,19 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return await this.usersService.update(request.user.id, updateUserDto);
+  }
+
+  @Patch('/password')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: UserEntity })
+  async updatePassword(
+    @Req() request: UserRequest,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return await this.usersService.updatePassword(
+      request.user.id,
+      updatePasswordDto,
+    );
   }
 
   @HttpCode(204)

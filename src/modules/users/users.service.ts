@@ -2,17 +2,21 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import * as path from 'path';
 import { convertUserToResponse } from './utils/response.uitls';
 import UserRequest from '../auth/types/user-request.interface';
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
+import {
+  FILE_ERROR_MESSAGE,
+  VALIDATE_ERROR_MESSAGE,
+} from './constants/messages';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 export const roundsOfHashing = 10;
 const DEFAULT_IMAGE_URL =
@@ -110,13 +114,6 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    if (updateUserDto.password) {
-      updateUserDto.password = await bcrypt.hash(
-        updateUserDto.password,
-        roundsOfHashing,
-      );
-    }
-
     const user = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
@@ -124,6 +121,36 @@ export class UsersService {
     });
 
     return convertUserToResponse(user);
+  }
+
+  async updatePassword(
+    id: number,
+    { password, newPassword }: UpdatePasswordDto,
+  ) {
+    const user = await this.findOneById(id);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new BadRequestException(VALIDATE_ERROR_MESSAGE.PASSWORD_NOT_MATCH);
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+    if (isSamePassword) {
+      throw new BadRequestException(
+        VALIDATE_ERROR_MESSAGE.SAME_AS_THE_OLD_PASSWORD,
+      );
+    }
+
+    const newHashPassword = await bcrypt.hash(newPassword, roundsOfHashing);
+
+    const updateUser = await this.prisma.user.update({
+      where: { id },
+      data: { password: newHashPassword },
+      include: { role: true },
+    });
+
+    return convertUserToResponse(updateUser);
   }
 
   async remove(id: number) {
@@ -146,7 +173,7 @@ export class UsersService {
 
   async uploadAvatar(request: UserRequest, file: Express.MulterS3.File) {
     if (!file) {
-      throw new BadRequestException('파일이 존재하지 않습니다.');
+      throw new BadRequestException(FILE_ERROR_MESSAGE.FILE_NOT_FOUND);
     }
 
     const user = await this.prisma.user.update({

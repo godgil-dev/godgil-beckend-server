@@ -7,6 +7,8 @@ import {
   Matches,
   MinLength,
 } from 'class-validator';
+import { PASSWORD_VALIDATE_REGEX } from '../constants/vaildate';
+import { VALIDATE_ERROR_MESSAGE } from '../constants/messages';
 
 export class CreateUserDto {
   @IsString()
@@ -20,7 +22,7 @@ export class CreateUserDto {
   @IsEmail(
     {},
     {
-      message: '이메일이 올바르지 않습니다. 올바른 이메일 주소를 입력해주세요.',
+      message: VALIDATE_ERROR_MESSAGE.EMAIL,
     },
   )
   email: string;
@@ -29,9 +31,8 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(8)
   @ApiProperty()
-  @Matches(/^(?=.*[a-z])(?=.*\d)(?=.*[@!%*#?&])[a-z\d@!%*#?&]{8,20}$/g, {
-    message:
-      '비밀번호가 올바르지 않습니다. 최소 8자, 최대 20자, 최소 하나의 문자, 숫자, 특수문자를 포함해주세요.',
+  @Matches(PASSWORD_VALIDATE_REGEX, {
+    message: VALIDATE_ERROR_MESSAGE.PASSWORD,
   })
   password: string;
 

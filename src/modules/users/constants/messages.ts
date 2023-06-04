@@ -7,3 +7,7 @@ export const VALIDATE_ERROR_MESSAGE = {
   PASSWORD_NOT_MATCH: `기존 패스워드와 일치하지 않습니다. 다시 확인해주세요`,
   SAME_AS_THE_OLD_PASSWORD: '기존 패스워드와 동일합니다. 다르게 설정해주세요',
 } as const;
+
+export const FILE_ERROR_MESSAGE = {
+  FILE_NOT_FOUND: '파일이 존재하지 않습니다.',
+};

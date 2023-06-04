@@ -12,7 +12,10 @@ import { convertUserToResponse } from './utils/response.uitls';
 import UserRequest from '../auth/types/user-request.interface';
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
-import { VALIDATE_ERROR_MESSAGE } from './constants/messages';
+import {
+  FILE_ERROR_MESSAGE,
+  VALIDATE_ERROR_MESSAGE,
+} from './constants/messages';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 
 export const roundsOfHashing = 10;
@@ -170,7 +173,7 @@ export class UsersService {
 
   async uploadAvatar(request: UserRequest, file: Express.MulterS3.File) {
     if (!file) {
-      throw new BadRequestException('파일이 존재하지 않습니다.');
+      throw new BadRequestException(FILE_ERROR_MESSAGE.FILE_NOT_FOUND);
     }
 
     const user = await this.prisma.user.update({

@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -114,6 +113,16 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
+    if (updateUserDto.username !== undefined) {
+      const isExists = await this.prisma.user.findFirst({
+        where: { username: updateUserDto.username },
+      });
+
+      if (isExists) {
+        throw new ConflictException(VALIDATE_ERROR_MESSAGE.DUPLICATE_USERNAME);
+      }
+    }
+
     const user = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,

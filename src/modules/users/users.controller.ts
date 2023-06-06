@@ -52,11 +52,7 @@ export class UsersController {
     @Req() request: UserRequest,
     @UploadedFile() file: Express.MulterS3.File,
   ) {
-    const user = await this.usersService.uploadAvatar(request, file);
-
-    return {
-      avatarUrl: user.avatarUrl,
-    };
+    return await this.usersService.uploadAvatar(request, file);
   }
 
   @Delete('/avatar')

@@ -2,13 +2,16 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Redirect,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
@@ -18,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { Public } from './decorators/public.decorator';
-import UserRequest from './types/user-request.interface';
+import { GoogleOauthGuard } from './guards/google-oatuh.guard';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -71,7 +74,7 @@ export class AuthController {
       },
     },
   })
-  async getToken(@Req() req: UserRequest, @Res() response: Response) {
+  async getToken(@Req() req: Request, @Res() response: Response) {
     const refreshToken = req.cookies['refreshToken'];
 
     const { accessToken, newRefreshToken } = await this.authService.refresh(
@@ -90,7 +93,42 @@ export class AuthController {
   @Delete('logout')
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Req() req: UserRequest): Promise<void> {
+  async logout(@Req() req: Request): Promise<void> {
     await this.authService.logout(req.user);
+  }
+
+  @Get('google')
+  @Public()
+  @UseGuards(GoogleOauthGuard)
+  async googleAuth(): Promise<void> {
+    // redirect google login page
+  }
+
+  @Get('google/callback')
+  @Public()
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthCallback(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    // ...
+    const { user } = req;
+
+    const { accessToken, refreshToken, payload } =
+      await this.authService.oauthLogin(user, 'google');
+
+    response.setHeader('Authorization', `Bearer ${accessToken}`);
+
+    // refresh token을 HttpOnly cookie에 담아 전송
+    response.cookie('refreshToken', refreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
+
+    response.json({
+      username: payload.username,
+      avatarUrl: payload.avatarUrl,
+      role: payload.role,
+    });
   }
 }

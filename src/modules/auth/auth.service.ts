@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
+import { OauthService } from './../oauth/oauth.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,45 +17,66 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly oauthService: OauthService,
     @Inject(CACHE_MANAGER) private cache: Cache,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOneByEmail(email);
-
-    // If no user is found, throw an error
-    if (!user) {
-      throw new NotFoundException(`No user found for username: ${email}`);
-    }
-    // Step 2: Check if the password is correct
-    const isPasswordValid = await bcrypt.compare(pass, user.password);
-
-    // If password does not match, throw an error
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
-
-    const { password, createdAt, updatedAt, ...result } = user;
-    return result;
-  }
-
-  async login(email: string, password: string) {
-    const payload = await this.validateUser(email, password);
-    const accessToken = this.jwtService.sign(
-      { email: payload.email, username: payload.username },
+  generateAccessToken(email: string, username: string) {
+    return this.jwtService.sign(
+      { email, username },
       {
         expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME,
       },
     );
+  }
 
+  async generateRefreshToken(id: number) {
     const refreshToken = uuidv4();
-    const refreshTokenKey = `refreshToken:${payload.id}`;
+    const refreshTokenKey = `refreshToken:${id}`;
 
     await this.cache.set(
       refreshTokenKey,
       refreshToken,
       parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME),
     );
+
+    return refreshToken;
+  }
+
+  async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.usersService.findOneByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException(`No user found for username: ${email}`);
+    }
+    const isPasswordValid = await bcrypt.compare(pass, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid password');
+    }
+    const { password, createdAt, updatedAt, ...result } = user;
+
+    return result;
+  }
+
+  async login(email: string, password: string) {
+    const payload = await this.validateUser(email, password);
+    const accessToken = this.generateAccessToken(email, payload.username);
+    const refreshToken = await this.generateRefreshToken(payload.id);
+
+    return { accessToken, refreshToken, payload };
+  }
+
+  async oauthLogin(user: Express.User, provider: string) {
+    const { email } = user;
+    console.log(email);
+    const payload = await this.usersService.findOrCreateByEmail(email);
+    console.log(payload);
+
+    await this.oauthService.findOrCreate(payload.id, email, provider);
+
+    const accessToken = this.generateAccessToken(email, payload.username);
+    const refreshToken = await this.generateRefreshToken(payload.id);
 
     return { accessToken, refreshToken, payload };
   }
@@ -75,19 +97,9 @@ export class AuthService {
     if (!storeRefreshToken || refreshToken !== storeRefreshToken) {
       throw new UnauthorizedException('Invalid token');
     }
+    const accessToken = this.generateAccessToken(user.email, user.username);
+    const newRefreshToken = this.generateRefreshToken(user.id);
 
-    const newRefreshToken = uuidv4();
-
-    await this.cache.set(
-      refreshTokenKey,
-      newRefreshToken,
-      parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME),
-    );
-
-    const payload = { username: user.username, email: user.email };
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME,
-    });
     return { accessToken, newRefreshToken };
   }
 

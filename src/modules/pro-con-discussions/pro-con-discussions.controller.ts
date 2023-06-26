@@ -13,15 +13,15 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
+import { AuthService } from '../auth/auth.service';
 import { ProConDiscussionsService } from './pro-con-discussions.service';
 import { CreateProConDiscussionDto } from './dto/create-pro-con-discussion.dto';
 import { UpdateProConDiscussionDto } from './dto/update-pro-con-discussion.dto';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import UserRequest from 'src/modules/auth/types/user-request.interface';
-import { Public } from 'src/modules/auth/decorators/public.decorator';
-import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
-import { AuthService } from '../auth/auth.service';
 import { ListProConDiscussionQueryDto } from './dto/list-pro-con-discussion-query.dto';
+import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { Request } from 'express';
 
 @ApiTags('pro-con-discussions')
 @Controller('pro-con-discussions')
@@ -36,7 +36,7 @@ export class ProConDiscussionsController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createProConDiscussionDto: CreateProConDiscussionDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return await this.proConDiscussionsService.create(
       createProConDiscussionDto,
@@ -52,7 +52,7 @@ export class ProConDiscussionsController {
   @Get()
   async findAll(
     @Query() listProConDiscussionQueryDto: ListProConDiscussionQueryDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const { page, limit, myPostsOnly } = listProConDiscussionQueryDto;
     const offset = (page - 1) * limit;
@@ -78,7 +78,7 @@ export class ProConDiscussionsController {
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const token = request.headers.authorization?.replace('Bearer ', '');
     const user = await this.authService.getUserFromToken(token);
@@ -92,7 +92,7 @@ export class ProConDiscussionsController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProConDiscussionDto: UpdateProConDiscussionDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return this.proConDiscussionsService.update(
       id,

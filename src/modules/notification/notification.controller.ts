@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import UserRequest from '../auth/types/user-request.interface';
+import { Request } from 'express';
 
 @ApiTags('notification')
 @Controller('notification')
@@ -20,7 +20,7 @@ export class NotificationController {
 
   @ApiBearerAuth()
   @Get()
-  findAll(@Req() request: UserRequest) {
+  findAll(@Req() request: Request) {
     return this.notificationService.getNotificationsForUser(request.user.id);
   }
 

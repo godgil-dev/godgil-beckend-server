@@ -1,7 +1,8 @@
 import { Controller, Get, Req } from '@nestjs/common';
-import { HomeService } from './home.service';
-import UserRequest from '../auth/types/user-request.interface';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
+
+import { HomeService } from './home.service';
 import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('home')
@@ -12,7 +13,7 @@ export class HomeController {
   @Public()
   @ApiBearerAuth()
   @Get()
-  findAll(@Req() request: UserRequest) {
+  findAll(@Req() request: Request) {
     return this.homeService.findAll(request.user?.id || -1);
   }
 }

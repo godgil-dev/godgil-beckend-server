@@ -12,14 +12,15 @@ import {
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/modules/auth/decorators/public.decorator';
-import UserRequest from 'src/modules/auth/types/user-request.interface';
-import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
+
 import { BookDiscussionsService } from './book-discussions.service';
+import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { OwnershipGuard } from 'src/modules/posts/guards/ownership.guard';
+import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 import { CreateBookDiscussionDto } from './dto/create-book-discussion.dto';
 import { UpdateBookDiscussionDto } from './dto/update-book-discussion.dto';
-import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 import { ListBookDiscussionQueryDto } from './dto/list-book-discussion-query.dto';
 
 @ApiTags('book-discussions')
@@ -33,7 +34,7 @@ export class BookDiscussionsController {
   @Post()
   async create(
     @Body() createBookDiscussionDto: CreateBookDiscussionDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return this.bookDiscussionsService.create(
       createBookDiscussionDto,
@@ -50,7 +51,7 @@ export class BookDiscussionsController {
   @Get()
   async findAll(
     @Query() listBookDiscussionQueryDto: ListBookDiscussionQueryDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const { page, limit, sortBy, myPostsOnly } = listBookDiscussionQueryDto;
     const offset = (page - 1) * limit;
@@ -81,7 +82,7 @@ export class BookDiscussionsController {
   @ApiBearerAuth()
   async findOne(
     @Param('postId', ParseIntPipe) postId: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return this.bookDiscussionsService.findOne(postId, request.user?.id || -1);
   }
@@ -92,7 +93,7 @@ export class BookDiscussionsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookDiscussionDto: UpdateBookDiscussionDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return await this.bookDiscussionsService.update(
       id,

@@ -36,6 +36,7 @@ import { MypageModule } from './modules/mypage/mypage.module';
 import { HomeModule } from './modules/home/home.module';
 // import { EventsGateway } from './websocket/comments-notification/gateways/events.gateway';
 import { NotificationModule } from './modules/notification/notification.module';
+import { OauthModule } from './modules/oauth/oauth.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     MypageModule,
     HomeModule,
     NotificationModule,
+    OauthModule,
   ],
   controllers: [AppController],
   providers: [

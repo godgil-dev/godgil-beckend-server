@@ -12,19 +12,20 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import UserRequest from 'src/modules/auth/types/user-request.interface';
-import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
-import { CommentOwnershipGuard } from './guards/comment-ownership.guard';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+
+import { CommentsService } from './comments.service';
 import { CommentsLikeService } from 'src/modules/comments-like/comments-like.service';
 import { CommentsDislikeService } from 'src/modules/comments-dislike/comments-dislike.service';
-import { QueryPostExistGuard } from 'src/modules/posts/guards/query-post-exits.guard';
-
 import { CommentExistGuard } from './guards/comment-exist.guard';
+import { CommentOwnershipGuard } from './guards/comment-ownership.guard';
+import { QueryPostExistGuard } from 'src/modules/posts/guards/query-post-exits.guard';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
+
 import { Public } from 'src/modules/auth/decorators/public.decorator';
-import { CommentsService } from './comments.service';
 
 @ApiTags('comments')
 @Controller('comments')
@@ -43,7 +44,7 @@ export class CommentsController {
   async create(
     @Body() createCommentDto: CreateCommentDto,
     @Query('postId', ParseIntPipe) postId: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return this.commentsService.create(
       createCommentDto,
@@ -62,7 +63,7 @@ export class CommentsController {
   async findAll(
     @Query() paginationQueryDto: PaginationQueryDto,
     @Query('postId', ParseIntPipe) postId: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;
@@ -87,7 +88,7 @@ export class CommentsController {
   @Get('user')
   async findAllByUserId(
     @Query() { page, limit }: PaginationQueryDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const { comments, pageInfo } = await this.commentsService.findAllByUserId(
       request.user.id,
@@ -113,7 +114,7 @@ export class CommentsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCommentDto: UpdateCommentDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return await this.commentsService.update(
       updateCommentDto,
@@ -133,10 +134,7 @@ export class CommentsController {
   @ApiBearerAuth()
   @Post(':id/like')
   @UseGuards(CommentExistGuard)
-  async like(
-    @Param('id', ParseIntPipe) id: number,
-    @Req() request: UserRequest,
-  ) {
+  async like(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
     return await this.commentsLikeService.create({
       commentId: id,
       userId: request.user.id,
@@ -149,7 +147,7 @@ export class CommentsController {
   @UseGuards(CommentExistGuard)
   async likeRemove(
     @Param('id', ParseIntPipe) id: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     await this.commentsLikeService.removeThrow(id, request.user.id);
   }
@@ -159,7 +157,7 @@ export class CommentsController {
   @UseGuards(CommentExistGuard)
   async dislike(
     @Param('id', ParseIntPipe) id: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return await this.commentsDislikeService.create({
       commentId: id,
@@ -173,7 +171,7 @@ export class CommentsController {
   @UseGuards(CommentExistGuard)
   async dislikeRemove(
     @Param('id', ParseIntPipe) id: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     await this.commentsDislikeService.removeThrow(id, request.user.id);
   }

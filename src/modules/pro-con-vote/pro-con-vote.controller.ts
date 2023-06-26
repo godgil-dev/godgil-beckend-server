@@ -11,7 +11,7 @@ import { ProConVoteService } from './pro-con-vote.service';
 import { CreateProConVoteDto } from './dto/create-pro-con-vote.dto';
 import { UpdateProConVoteDto } from './dto/update-pro-con-vote.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import UserRequest from 'src/modules/auth/types/user-request.interface';
+import { Request } from 'express';
 
 @ApiTags('pro-con-vote')
 @Controller('pro-con-vote/:postId')
@@ -23,7 +23,7 @@ export class ProConVoteController {
   create(
     @Param('postId', ParseIntPipe) postId: number,
     @Body() createProConVoteDto: CreateProConVoteDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return this.proConVoteService.create(
       createProConVoteDto,
@@ -37,7 +37,7 @@ export class ProConVoteController {
   update(
     @Param('postId', ParseIntPipe) postId: number,
     @Body() updateProConVoteDto: UpdateProConVoteDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return this.proConVoteService.update(
       updateProConVoteDto,

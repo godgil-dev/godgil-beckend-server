@@ -1,9 +1,9 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import UserRequest from '../auth/types/user-request.interface';
 import { Public } from '../auth/decorators/public.decorator';
 import { SearchAllDto } from './dto/search-all.dto';
+import { Request } from 'express';
 
 @ApiTags('sarch')
 @Controller('search')
@@ -20,7 +20,7 @@ export class SearchController {
   @Get()
   async searchAll(
     @Query() searchAllDto: SearchAllDto,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const { page, limit, query, type, isbn } = searchAllDto;
 

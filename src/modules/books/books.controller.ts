@@ -1,17 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Req,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import UserRequest from '../auth/types/user-request.interface';
+import { Request } from 'express';
 
 @ApiTags('books')
 @Controller('books')
@@ -27,7 +19,7 @@ export class BooksController {
   @ApiBearerAuth()
   @Public()
   @Get(':isbn')
-  async findOne(@Param('isbn') isbn: string, @Req() request: UserRequest) {
+  async findOne(@Param('isbn') isbn: string, @Req() request: Request) {
     return await this.booksService.findBookDiscussionsByIsbn(
       isbn,
       0,

@@ -5,7 +5,10 @@ type convertUserToResponseType = User & {
   avatarUrl: string;
 };
 
-export function convertUserToResponse(user: convertUserToResponseType) {
+export function convertUserToResponse(
+  user: convertUserToResponseType,
+  includeId = false,
+) {
   const role = user.role.name ?? '';
 
   return {
@@ -15,5 +18,6 @@ export function convertUserToResponse(user: convertUserToResponseType) {
     role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    ...(includeId && { id: user.id }),
   };
 }

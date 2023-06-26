@@ -9,11 +9,11 @@ import {
   Get,
   Query,
 } from '@nestjs/common';
-import { PostLikesService } from './post-likes.service';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import UserRequest from '../auth/types/user-request.interface';
-import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
+import { Request } from 'express';
+import { PostLikesService } from './post-likes.service';
 import { PaginationQueryDto } from 'src/shared/dto/pagenation-query.dto';
+import { ParamPostExistGuard } from '../posts/guards/param-post-exits.guard';
 
 @ApiTags('likes')
 @Controller('likes')
@@ -25,7 +25,7 @@ export class PostLikesController {
   @UseGuards(ParamPostExistGuard)
   async create(
     @Param('postId', ParseIntPipe) postId: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return await this.postLikesService.create(postId, request.user.id);
   }
@@ -35,7 +35,7 @@ export class PostLikesController {
   @UseGuards(ParamPostExistGuard)
   async remove(
     @Param('postId', ParseIntPipe) postId: number,
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     return await this.postLikesService.remove(postId, request.user.id);
   }
@@ -48,7 +48,7 @@ export class PostLikesController {
   async findAll(
     @Query() paginationQueryDto: PaginationQueryDto,
     sortBy: 'lastest' | 'popular' = 'lastest',
-    @Req() request: UserRequest,
+    @Req() request: Request,
   ) {
     const { page, limit } = paginationQueryDto;
     const offset = (page - 1) * limit;

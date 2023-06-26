@@ -19,6 +19,9 @@ env:
   AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
   AWS_SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
   IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+  GOOGLE_REDIRECT: ${{ secrets.GOOGLE_REDIRECT }}
 
 jobs:
   deploy:
@@ -53,6 +56,9 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "AWS_BUCKET_NAME=${{ env.AWS_BUCKET_NAME }}" >> .env
+          echo "GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_SECRET=${{ env.GOOGLE_SECRET }}" >> .env
+          echo "GOOGLE_REDIRECT=${{ env.GOOGLE_REDIRECT }}" >> .env
 
       - name: Build and push Docker image
         run: |

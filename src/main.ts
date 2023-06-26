@@ -1,4 +1,4 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 // import { winstonLogger } from './utils/winston.util';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
@@ -6,6 +6,7 @@ import * as cookieParser from 'cookie-parser';
 import { ThrottlerBehindProxyGuard } from './shared/guards/throttler-behind-proxy.guard';
 import { setupSwagger } from './utils/swagger';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
+import { PrismaClientExceptionFilter } from './shared/filters/prisma-client-exception/prisma-client-exception.filter';
 
 declare const module: any;
 
@@ -30,6 +31,9 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.useGlobalGuards(app.get(ThrottlerBehindProxyGuard));
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
 
   //swagger
   setupSwagger(app);

@@ -23,8 +23,8 @@ import {
 } from '@nestjs/swagger';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import UserRequest from '../auth/types/user-request.interface';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Request } from 'express';
 
 @Controller('users')
 @ApiTags('users')
@@ -49,7 +49,7 @@ export class UsersController {
   @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
-    @Req() request: UserRequest,
+    @Req() request: Request,
     @UploadedFile() file: Express.MulterS3.File,
   ) {
     return await this.usersService.uploadAvatar(request, file);
@@ -58,7 +58,7 @@ export class UsersController {
   @Delete('/avatar')
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
-  async removeAvatar(@Req() request: UserRequest) {
+  async removeAvatar(@Req() request: Request) {
     const user = await this.usersService.removeAvatar(request.user.id);
 
     return new UserEntity(user);
@@ -83,17 +83,14 @@ export class UsersController {
   @Get()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
-  async findOne(@Req() request: UserRequest) {
+  async findOne(@Req() request: Request) {
     return await this.usersService.findOneById(request.user.id);
   }
 
   @Patch()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
-  async update(
-    @Req() request: UserRequest,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
+  async update(@Req() request: Request, @Body() updateUserDto: UpdateUserDto) {
     return await this.usersService.update(request.user.id, updateUserDto);
   }
 
@@ -101,7 +98,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
   async updatePassword(
-    @Req() request: UserRequest,
+    @Req() request: Request,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     return await this.usersService.updatePassword(
@@ -114,7 +111,7 @@ export class UsersController {
   @Delete()
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
-  async remove(@Req() request: UserRequest) {
+  async remove(@Req() request: Request) {
     await this.usersService.remove(request.user.id);
   }
 }

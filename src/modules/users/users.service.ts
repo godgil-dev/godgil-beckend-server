@@ -8,7 +8,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { convertUserToResponse } from './utils/response.uitls';
-import UserRequest from '../auth/types/user-request.interface';
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -16,8 +15,9 @@ import {
   VALIDATE_ERROR_MESSAGE,
 } from './constants/messages';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Request } from 'express';
 
-export const roundsOfHashing = 10;
+export const ROUNDS_OF_HASHING = 10;
 const DEFAULT_IMAGE_URL =
   'https://www.thechooeok.com/common/img/default_profile.png';
 
@@ -49,44 +49,52 @@ export class UsersService {
     return user;
   }
 
-  async create(createUserDto: CreateUserDto) {
-    const usernamePrefix = createUserDto.email.split('@')[0];
+  async generateUsername(email: string) {
+    const usernamePrefix = email.split('@')[0];
+    let suffix = 0;
+    let username = usernamePrefix;
+
+    let count = await this.prisma.user.count({
+      where: { username: username },
+    });
+
+    while (count > 0) {
+      suffix += 1;
+      username = `${usernamePrefix}_${suffix.toString().padStart(2, '0')}`;
+      count = await this.prisma.user.count({
+        where: { username: username },
+      });
+    }
+
+    return username;
+  }
+
+  async generateHashedPassword(password: string) {
+    if (!password) {
+      return null;
+    }
+
+    return await bcrypt.hash(password, ROUNDS_OF_HASHING);
+  }
+
+  async create(createUserDto: CreateUserDto, includeId = false) {
     const existingEmail = await this.prisma.user.findUnique({
       where: { email: createUserDto.email },
     });
-    let suffix = 1;
-    let newUsername = usernamePrefix;
 
     if (existingEmail) {
       throw new ConflictException('이미 존재하는 이메일 주소입니다');
     }
-
-    let count = await this.prisma.user.count({
-      where: { username: newUsername },
-    });
-
-    while (count > 0) {
-      newUsername = `${usernamePrefix}_${suffix.toString().padStart(2, '0')}`;
-      count = await this.prisma.user.count({
-        where: { username: newUsername },
-      });
-      suffix++;
-    }
-
-    const hashedPassword = await bcrypt.hash(
-      createUserDto.password,
-      roundsOfHashing,
-    );
-
-    createUserDto.password = hashedPassword;
+    const username = await this.generateUsername(createUserDto.email);
+    const password = await this.generateHashedPassword(createUserDto.password);
     const avatarUrl = createUserDto.avatarUrl || DEFAULT_IMAGE_URL;
 
     const user = await this.prisma.user.create({
-      data: { ...createUserDto, username: newUsername, avatarUrl },
+      data: { ...createUserDto, password, username, avatarUrl },
       include: { role: true },
     });
 
-    return convertUserToResponse(user);
+    return convertUserToResponse(user, includeId);
   }
 
   async findAll() {
@@ -110,6 +118,24 @@ export class UsersService {
       where: { id },
       include: { role: true },
     });
+  }
+
+  async findOrCreateByEmail(email: string) {
+    const user = await this.findOneByEmail(email);
+
+    if (user) {
+      return convertUserToResponse(user, true);
+    }
+
+    return await this.create(
+      {
+        email,
+        password: null,
+        username: null,
+        avatarUrl: null,
+      },
+      true,
+    );
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -151,7 +177,7 @@ export class UsersService {
       );
     }
 
-    const newHashPassword = await bcrypt.hash(newPassword, roundsOfHashing);
+    const newHashPassword = await this.generateHashedPassword(newPassword);
 
     const updateUser = await this.prisma.user.update({
       where: { id },
@@ -180,7 +206,7 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } });
   }
 
-  async uploadAvatar(request: UserRequest, file: Express.MulterS3.File) {
+  async uploadAvatar(request: Request, file: Express.MulterS3.File) {
     if (!file) {
       throw new BadRequestException(FILE_ERROR_MESSAGE.FILE_NOT_FOUND);
     }
@@ -218,7 +244,7 @@ export class UsersService {
     return convertUserToResponse(user);
   }
 
-  generateAvatarUrl(request: UserRequest, fileName: string) {
+  generateAvatarUrl(request: Request, fileName: string) {
     const host = request.protocol + '://' + request.get('host'); // 호스트 정보 가져오기
     const avatarUrl = `${host}/uploads/${fileName}`; // 아바타 URL 생성
 

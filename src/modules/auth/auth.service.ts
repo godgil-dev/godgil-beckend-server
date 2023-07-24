@@ -5,12 +5,14 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OauthService } from './../oauth/oauth.service';
-import { JwtService } from '@nestjs/jwt';
+
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +20,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly oauthService: OauthService,
+    private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private cache: Cache,
   ) {}
 
@@ -25,7 +28,7 @@ export class AuthService {
     return this.jwtService.sign(
       { email, username },
       {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME,
+        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME'),
       },
     );
   }
@@ -37,7 +40,7 @@ export class AuthService {
     await this.cache.set(
       refreshTokenKey,
       refreshToken,
-      parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME),
+      parseInt(this.configService.get('REFRESH_TOKEN_EXPIRATION_TIME')),
     );
 
     return refreshToken;
@@ -67,18 +70,26 @@ export class AuthService {
     return { accessToken, refreshToken, payload };
   }
 
-  async oauthLogin(user: Express.User, provider: string) {
-    const { email } = user;
-    console.log(email);
-    const payload = await this.usersService.findOrCreateByEmail(email);
-    console.log(payload);
-
-    await this.oauthService.findOrCreate(payload.id, email, provider);
-
-    const accessToken = this.generateAccessToken(email, payload.username);
+  async googleLogin(code: string) {
+    const payload = await this.validateGoogleUser(code);
+    const { email, name: username } = payload;
+    const accessToken = this.generateAccessToken(email, username);
     const refreshToken = await this.generateRefreshToken(payload.id);
 
     return { accessToken, refreshToken, payload };
+  }
+
+  async oauthLogin(user: Express.User, provider: string) {
+    const { email } = user;
+    const { username, avatarUrl, role, id } =
+      await this.usersService.findOrCreateByEmail(email);
+
+    await this.oauthService.findOrCreate(id, email, provider);
+
+    const accessToken = this.generateAccessToken(email, username);
+    const refreshToken = await this.generateRefreshToken(id);
+
+    return { accessToken, refreshToken, user: { username, avatarUrl, role } };
   }
 
   async logout(user: any) {
@@ -97,7 +108,9 @@ export class AuthService {
     if (!storeRefreshToken || refreshToken !== storeRefreshToken) {
       throw new UnauthorizedException('Invalid token');
     }
+
     const accessToken = this.generateAccessToken(user.email, user.username);
+
     const newRefreshToken = this.generateRefreshToken(user.id);
 
     return { accessToken, newRefreshToken };
@@ -118,5 +131,17 @@ export class AuthService {
     } catch (error) {
       return null; // 토큰이 유효하지 않은 경우 null 반환
     }
+  }
+
+  async validateGoogleUser(code: string): Promise<any> {
+    const { access_token: googleToken } =
+      await this.oauthService.getGoogleToken(code);
+
+    const googleUser = await this.oauthService.getGoogleUser(googleToken);
+    console.log(googleUser);
+    const { email } = googleUser;
+    const user = await this.usersService.findOrCreateByEmail(email);
+    console.log(user);
+    return user;
   }
 }

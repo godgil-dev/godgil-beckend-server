@@ -6,7 +6,6 @@ import { UsersModule } from '../users/users.module';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './strategys/jwt.strategy';
 import { AuthController } from './auth.controller';
-import { GoogleStrategy } from './strategys/google.strategy';
 import { OauthModule } from '../oauth/oauth.module';
 
 @Module({
@@ -19,7 +18,7 @@ import { OauthModule } from '../oauth/oauth.module';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

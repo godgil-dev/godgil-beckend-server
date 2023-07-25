@@ -2,14 +2,11 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
-  Redirect,
   Req,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -20,8 +17,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/googleLogin.dto';
 import { Public } from './decorators/public.decorator';
-import { GoogleOauthGuard } from './guards/google-oatuh.guard';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -81,7 +78,7 @@ export class AuthController {
       refreshToken,
       req.user,
     );
-    // 새로운 refresh token을 HttpOnly cookie에 담아 전송
+
     response.setHeader('Authorization', `Bearer ${accessToken}`);
     response.cookie('refreshToken', newRefreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -97,29 +94,20 @@ export class AuthController {
     await this.authService.logout(req.user);
   }
 
-  @Get('google')
+  @Post('google-login')
+  @HttpCode(200)
+  @ApiCookieAuth('refreshToken')
   @Public()
-  @UseGuards(GoogleOauthGuard)
-  async googleAuth(): Promise<void> {
-    // redirect google login page
-  }
-
-  @Get('google/callback')
-  @Public()
-  @UseGuards(GoogleOauthGuard)
-  async googleAuthCallback(
-    @Req() req: Request,
+  async googleAuth(
+    @Body() { code }: GoogleLoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    // ...
-    const { user } = req;
-
+    // redirect google login page
     const { accessToken, refreshToken, payload } =
-      await this.authService.oauthLogin(user, 'google');
+      await this.authService.googleLogin(code);
 
     response.setHeader('Authorization', `Bearer ${accessToken}`);
 
-    // refresh token을 HttpOnly cookie에 담아 전송
     response.cookie('refreshToken', refreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
